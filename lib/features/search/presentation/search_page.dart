@@ -16,16 +16,19 @@ import '../../auth/data/auth_controller.dart';
 import '../data/search_models.dart';
 import '../data/search_repository.dart';
 
+// Memuat daftar kota untuk filter search.
 final citiesProvider = FutureProvider<List<String>>((ref) {
   return ref.read(searchRepositoryProvider).fetchCities();
 });
 
+// Memuat riwayat search hanya untuk user login.
 final searchHistoryProvider = FutureProvider<List<String>>((ref) {
   final auth = ref.watch(authControllerProvider);
   if (!auth.isAuthenticated) return const [];
   return ref.read(searchRepositoryProvider).fetchHistory();
 });
 
+// Halaman search mobile untuk keyword, semantic, kota, kategori, dan hasil destinasi.
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({this.initialQuery, super.key});
 
@@ -60,6 +63,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     super.dispose();
   }
 
+  // Menjalankan pencarian sesuai mode dan filter aktif.
   Future<void> _search() async {
     final query = _queryController.text.trim();
     if (query.isEmpty && _selectedCity.isEmpty && _selectedCategory.isEmpty) {

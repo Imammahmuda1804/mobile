@@ -6,6 +6,7 @@ import '../features/auth/data/auth_controller.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
 
+// Menjalankan restore session sebelum app utama ditampilkan.
 final appBootstrapProvider = FutureProvider<void>((ref) async {
   await Future.wait([
     ref.read(authControllerProvider.notifier).restoreSession(),
@@ -13,6 +14,7 @@ final appBootstrapProvider = FutureProvider<void>((ref) async {
   ]);
 });
 
+// Root widget yang memasang theme, router, dan startup splash.
 class RanahInsightApp extends ConsumerWidget {
   const RanahInsightApp({super.key});
 

@@ -5,6 +5,7 @@ import '../../../core/network/dio_client.dart';
 import 'auth_models.dart';
 import 'auth_repository.dart';
 
+// State autentikasi yang dibaca UI dan bootstrap app.
 class AuthState {
   const AuthState({
     this.user,
@@ -40,11 +41,13 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   },
 );
 
+// Controller Riverpod untuk login, register, restore session, dan logout.
 class AuthController extends StateNotifier<AuthState> {
   AuthController(this._ref) : super(const AuthState());
 
   final Ref _ref;
 
+  // Mengambil token tersimpan lalu memuat user aktif dari backend.
   Future<void> restoreSession() async {
     final storage = _ref.read(secureStorageProvider);
     final token = await storage.readAccessToken();

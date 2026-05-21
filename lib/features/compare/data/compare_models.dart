@@ -1,3 +1,4 @@
+// Model destinasi dalam hasil compare.
 class ComparedDestination {
   const ComparedDestination({
     required this.id,
@@ -78,6 +79,7 @@ class CompareTopic {
   final int totalReviews;
 }
 
+// Model hasil perbandingan dua destinasi.
 class CompareResult {
   const CompareResult({
     required this.destination1,

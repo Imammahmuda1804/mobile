@@ -21,11 +21,13 @@ import '../../search/data/search_models.dart';
 import '../data/destination_models.dart';
 import '../data/destination_repository.dart';
 
+// Memuat detail destinasi berdasarkan slug.
 final destinationDetailProvider =
     FutureProvider.family<DestinationDetail, String>((ref, slug) {
   return ref.read(destinationRepositoryProvider).fetchBySlug(slug);
 });
 
+// Halaman detail destinasi dengan hero, metrik, topik, galeri, favorite, dan review.
 class DestinationDetailPage extends ConsumerStatefulWidget {
   const DestinationDetailPage({required this.slug, super.key});
 
@@ -40,6 +42,7 @@ class _DestinationDetailPageState extends ConsumerState<DestinationDetailPage> {
   bool? _isFavorite;
   int? _favoriteCheckedFor;
 
+  // Mengecek status favorit user untuk destinasi aktif.
   Future<void> _checkFavorite(DestinationDetail destination) async {
     final auth = ref.read(authControllerProvider);
     if (!auth.isAuthenticated || _favoriteCheckedFor == destination.id) return;
@@ -55,6 +58,7 @@ class _DestinationDetailPageState extends ConsumerState<DestinationDetailPage> {
     }
   }
 
+  // Menambah atau menghapus favorit dengan rollback saat gagal.
   Future<void> _toggleFavorite(DestinationDetail destination) async {
     final auth = ref.read(authControllerProvider);
     if (!auth.isAuthenticated) {
@@ -1230,6 +1234,7 @@ class _ReviewTile extends StatelessWidget {
   }
 }
 
+// Membuka bottom sheet review berdasarkan topik atau topic group.
 void _showTopicReviews(
   BuildContext context, {
   required DestinationDetail destination,

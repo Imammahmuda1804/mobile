@@ -12,6 +12,7 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(ref.read(dioProvider));
 });
 
+// Repository API untuk profil, avatar, favorite, dan compare tray profile.
 class ProfileRepository {
   const ProfileRepository(this._dio);
 

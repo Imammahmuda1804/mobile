@@ -16,6 +16,7 @@ class DestinationTopic {
   final String name;
 }
 
+// Model ringkas destinasi untuk search, home, compare, dan favorite card.
 class DestinationSummary {
   const DestinationSummary({
     required this.id,
@@ -80,6 +81,7 @@ class DestinationSummary {
   final List<DestinationTopic> topics;
 }
 
+// Model topik yang dipakai sebagai metadata/filter search.
 class TopicFilter {
   const TopicFilter({required this.id, required this.name});
 

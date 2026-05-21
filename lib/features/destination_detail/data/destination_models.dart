@@ -1,6 +1,7 @@
 import '../../../core/utils/image_url.dart';
 import '../../search/data/search_models.dart';
 
+// Model detail destinasi lengkap untuk halaman detail.
 class DestinationDetail {
   const DestinationDetail({
     required this.id,
@@ -119,6 +120,7 @@ class DestinationDetail {
   final List<UserReview> userReviews;
 }
 
+// Model topic group luas untuk peta topik halaman detail.
 class TopicGroupInsight {
   const TopicGroupInsight({
     required this.id,
@@ -181,6 +183,7 @@ class TopicSentimentBreakdown {
   int get total => positive + negative + neutral;
 }
 
+// Model review scraping yang ditampilkan saat membuka topik.
 class ScrapedTopicReview {
   const ScrapedTopicReview({
     required this.id,

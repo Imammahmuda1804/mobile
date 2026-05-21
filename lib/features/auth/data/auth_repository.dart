@@ -10,6 +10,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.read(dioProvider));
 });
 
+// Repository API untuk login, register, dan user aktif.
 class AuthRepository {
   const AuthRepository(this._dio);
 

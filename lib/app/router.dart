@@ -13,6 +13,7 @@ import '../features/home/presentation/home_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/search/presentation/search_page.dart';
 
+// Router utama untuk tab shell, detail, auth, dan deep link query.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
@@ -69,6 +70,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+// Shell utama yang menampilkan brand bar dan bottom navigation.
 class MainShell extends StatelessWidget {
   const MainShell({required this.child, super.key});
 
@@ -113,6 +115,7 @@ class MainShell extends StatelessWidget {
   }
 }
 
+// Brand bar mobile yang menjaga identitas RANAHINSIGHT di setiap tab.
 class _MobileBrandBar extends StatelessWidget {
   const _MobileBrandBar();
 

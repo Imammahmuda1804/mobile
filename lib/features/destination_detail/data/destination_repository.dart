@@ -10,6 +10,7 @@ final destinationRepositoryProvider = Provider<DestinationRepository>((ref) {
   return DestinationRepository(ref.read(dioProvider));
 });
 
+// Repository API untuk detail destinasi, favorit, topik review, dan submit review.
 class DestinationRepository {
   const DestinationRepository(this._dio);
 

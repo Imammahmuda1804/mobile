@@ -14,6 +14,7 @@ import '../../../core/widgets/loading_skeleton.dart';
 import '../../search/data/search_models.dart';
 import '../data/home_repository.dart';
 
+// Memuat destinasi rekomendasi untuk home.
 final homeTrendingProvider = FutureProvider((ref) {
   return ref.read(homeRepositoryProvider).fetchTrending();
 });
@@ -39,6 +40,7 @@ class _HeroImageFallback extends StatelessWidget {
   }
 }
 
+// Halaman home mobile dengan hero, prompt, insight, dan rekomendasi.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 

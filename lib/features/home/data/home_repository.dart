@@ -7,6 +7,7 @@ final homeRepositoryProvider = Provider<HomeRepository>((ref) {
   return HomeRepository(ref.read(searchRepositoryProvider));
 });
 
+// Repository API untuk rekomendasi dan trending di home.
 class HomeRepository {
   const HomeRepository(this._searchRepository);
 

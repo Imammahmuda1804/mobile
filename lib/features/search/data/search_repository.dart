@@ -10,6 +10,7 @@ final searchRepositoryProvider = Provider<SearchRepository>((ref) {
   return SearchRepository(ref.read(dioProvider));
 });
 
+// Repository API untuk keyword search, semantic search, kota, history, dan rekomendasi.
 class SearchRepository {
   const SearchRepository(this._dio);
 
@@ -102,6 +103,7 @@ class SearchRepository {
   }
 }
 
+// Membaca list dari response backend yang bisa terbungkus.
 List<Map<String, dynamic>> _readList(Response<dynamic> response) {
   final data = unwrapData(response);
   if (data is List) return data.whereType<Map<String, dynamic>>().toList();

@@ -17,10 +17,12 @@ import '../../../core/widgets/loading_skeleton.dart';
 import '../data/compare_models.dart';
 import '../data/compare_repository.dart';
 
+// Memuat daftar destinasi untuk picker compare.
 final compareDestinationsProvider = FutureProvider((ref) {
   return ref.read(compareRepositoryProvider).fetchDestinations();
 });
 
+// Halaman compare mobile untuk memilih dua destinasi dan melihat hasil analitik.
 class ComparePage extends ConsumerStatefulWidget {
   const ComparePage({this.initialFirstId, this.initialSecondId, super.key});
 
@@ -48,6 +50,7 @@ class _ComparePageState extends ConsumerState<ComparePage> {
     }
   }
 
+  // Meminta hasil compare saat dua destinasi sudah dipilih.
   Future<void> _compare() async {
     if (_firstId == null || _secondId == null) return;
     setState(() {

@@ -15,6 +15,7 @@ final compareRepositoryProvider = Provider<CompareRepository>((ref) {
   );
 });
 
+// Repository API untuk daftar destinasi dan hasil perbandingan.
 class CompareRepository {
   const CompareRepository(this._dio, this._searchRepository);
 

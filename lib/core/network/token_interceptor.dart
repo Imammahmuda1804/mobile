@@ -5,6 +5,7 @@ import '../../app/config/api_endpoints.dart';
 import '../../features/auth/data/auth_controller.dart';
 import 'dio_client.dart';
 
+// Interceptor yang memasang access token dan menangani sesi kadaluarsa.
 class TokenInterceptor extends Interceptor {
   TokenInterceptor(this.ref, this.dio);
 

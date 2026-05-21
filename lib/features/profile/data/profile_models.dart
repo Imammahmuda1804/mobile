@@ -1,5 +1,6 @@
 import '../../search/data/search_models.dart';
 
+// Model destinasi favorit yang dipakai halaman profile.
 class FavoriteDestination {
   const FavoriteDestination({
     required this.id,

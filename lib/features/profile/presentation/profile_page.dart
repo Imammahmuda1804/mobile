@@ -23,10 +23,12 @@ import '../../auth/data/auth_controller.dart';
 import '../data/profile_models.dart';
 import '../data/profile_repository.dart';
 
+// Memuat daftar favorite user login.
 final favoritesProvider = FutureProvider<List<FavoriteDestination>>((ref) {
   return ref.read(profileRepositoryProvider).fetchFavorites();
 });
 
+// Halaman profile untuk data user, favorite, filter, upload avatar, dan compare tray.
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
