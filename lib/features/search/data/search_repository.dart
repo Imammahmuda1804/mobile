@@ -17,8 +17,8 @@ class SearchRepository {
 
   Future<List<DestinationSummary>> searchKeyword({
     String? query,
-    List<int> topicIds = const [],
     String? city,
+    String? category,
   }) async {
     try {
       final response = await _dio.get<dynamic>(
@@ -26,8 +26,8 @@ class SearchRepository {
         queryParameters: {
           'limit': 20,
           if (query != null && query.isNotEmpty) 'search': query,
-          if (topicIds.isNotEmpty) 'topic_ids': topicIds.join(','),
           if (city != null && city.isNotEmpty) 'city': city,
+          if (category != null && category.isNotEmpty) 'category': category,
         },
       );
       return _readList(response).map(DestinationSummary.fromJson).toList();
@@ -39,8 +39,8 @@ class SearchRepository {
   Future<List<DestinationSummary>> searchSemantic({
     required String query,
     String sort = 'hybrid',
-    List<int> topicIds = const [],
     String? city,
+    String? category,
   }) async {
     try {
       final response = await _dio.post<dynamic>(
@@ -48,8 +48,8 @@ class SearchRepository {
         data: {
           'query': query,
           'sort': sort,
-          if (topicIds.isNotEmpty) 'topic_ids': topicIds,
           if (city != null && city.isNotEmpty) 'city': city,
+          if (category != null && category.isNotEmpty) 'category': category,
         },
       );
       return _readList(response).map(DestinationSummary.fromJson).toList();
@@ -59,7 +59,10 @@ class SearchRepository {
   }
 
   Future<List<TopicFilter>> fetchTopics() async {
-    final response = await _dio.get<dynamic>(ApiEndpoints.topics);
+    final response = await _dio.get<dynamic>(
+      ApiEndpoints.topics,
+      queryParameters: const {'scope': 'search'},
+    );
     return _readList(response).map(TopicFilter.fromJson).toList();
   }
 

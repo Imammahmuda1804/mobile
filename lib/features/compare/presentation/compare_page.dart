@@ -234,7 +234,7 @@ class _DestinationPickButton extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary),
+            Icon(icon, color: AppColors.ai),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -276,9 +276,9 @@ class _CompareResultView extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF3EC),
+            color: AppColors.surfaceCool,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFFFD6C2)),
+            border: Border.all(color: AppColors.ai.withValues(alpha: .18)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,11 +301,11 @@ class _CompareResultView extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _DestinationPanel(dest: first, tone: AppColors.primary),
+              child: _DestinationPanel(dest: first, tone: AppColors.explore),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _DestinationPanel(dest: second, tone: AppColors.secondary),
+              child: _DestinationPanel(dest: second, tone: AppColors.ai),
             ),
           ],
         ),
@@ -319,15 +319,15 @@ class _CompareResultView extends StatelessWidget {
             InfoPill(
                 label: 'Positif',
                 icon: LucideIcons.thumbsUp,
-                color: AppColors.success),
+                color: AppColors.positive),
             InfoPill(
                 label: 'Netral',
                 icon: LucideIcons.minus,
-                color: AppColors.muted),
+                color: AppColors.neutral),
             InfoPill(
                 label: 'Negatif',
                 icon: LucideIcons.triangleAlert,
-                color: AppColors.danger),
+                color: AppColors.negative),
           ],
         ),
         const SizedBox(height: 12),
@@ -363,17 +363,17 @@ class _CompareResultView extends StatelessWidget {
             BarChartRodStackItem(
               0,
               dest.positive.toDouble(),
-              AppColors.success,
+              AppColors.positive,
             ),
             BarChartRodStackItem(
               dest.positive.toDouble(),
               (dest.positive + dest.neutral).toDouble(),
-              AppColors.muted,
+              AppColors.neutral,
             ),
             BarChartRodStackItem(
               (dest.positive + dest.neutral).toDouble(),
               (dest.positive + dest.neutral + dest.negative).toDouble(),
-              AppColors.danger,
+              AppColors.negative,
             ),
           ],
           width: 38,
@@ -417,13 +417,13 @@ class _DestinationPanel extends StatelessWidget {
           _PanelMetric(
             icon: LucideIcons.thumbsUp,
             label: 'Positif ${percentLabel(dest.positiveRatio)}',
-            color: AppColors.success,
+            color: AppColors.positive,
           ),
           _PanelMetric(
             icon: LucideIcons.star,
             label:
                 'Rating ${ratingLabel(dest.userRating ?? dest.googleRating)}',
-            color: AppColors.warning,
+            color: AppColors.neutral,
           ),
           const SizedBox(height: 10),
           if (dest.slug != null)

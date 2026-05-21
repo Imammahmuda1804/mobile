@@ -6,7 +6,7 @@ class InfoPill extends StatelessWidget {
   const InfoPill({
     required this.label,
     required this.icon,
-    this.color = AppColors.primary,
+    this.color = AppColors.explore,
     this.background,
     super.key,
   });

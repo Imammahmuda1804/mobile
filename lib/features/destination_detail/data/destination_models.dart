@@ -23,6 +23,7 @@ class DestinationDetail {
     this.userRating,
     this.images = const [],
     this.topics = const [],
+    this.topicGroups = const [],
     this.topicSentiments = const {},
     this.userReviews = const [],
   });
@@ -30,6 +31,7 @@ class DestinationDetail {
   factory DestinationDetail.fromJson(Map<String, dynamic> json) {
     final rawImages = json['images'];
     final rawTopics = json['destinationTopics'];
+    final rawTopicGroups = json['topicGroups'];
     final rawReviews = json['userReviews'];
 
     return DestinationDetail(
@@ -76,6 +78,12 @@ class DestinationDetail {
               .whereType<DestinationTopic>()
               .toList()
           : const [],
+      topicGroups: rawTopicGroups is List
+          ? rawTopicGroups
+              .whereType<Map<String, dynamic>>()
+              .map(TopicGroupInsight.fromJson)
+              .toList()
+          : const [],
       topicSentiments: _parseTopicSentiments(json['topicSentimentBreakdown']),
       userReviews: rawReviews is List
           ? rawReviews
@@ -106,8 +114,49 @@ class DestinationDetail {
   final num? userRating;
   final List<String> images;
   final List<DestinationTopic> topics;
+  final List<TopicGroupInsight> topicGroups;
   final Map<int, TopicSentimentBreakdown> topicSentiments;
   final List<UserReview> userReviews;
+}
+
+class TopicGroupInsight {
+  const TopicGroupInsight({
+    required this.id,
+    required this.name,
+    required this.totalReviews,
+    required this.sentiment,
+    this.topics = const [],
+  });
+
+  factory TopicGroupInsight.fromJson(Map<String, dynamic> json) {
+    final rawTopics = json['topics'];
+    final rawSentiment = json['sentimentBreakdown'];
+    return TopicGroupInsight(
+      id: _int(json['groupId'] ?? json['id']) ?? 0,
+      name: json['groupName']?.toString() ??
+          json['group_name']?.toString() ??
+          'Topik perjalanan',
+      totalReviews: _int(json['totalReviews'] ?? json['total_reviews']) ?? 0,
+      sentiment: rawSentiment is Map<String, dynamic>
+          ? TopicSentimentBreakdown.fromJson(rawSentiment)
+          : const TopicSentimentBreakdown(),
+      topics: rawTopics is List
+          ? rawTopics
+              .whereType<Map<String, dynamic>>()
+              .map((topic) => DestinationTopic.fromJson({
+                    'id': topic['id'],
+                    'topicName': topic['topicName'] ?? topic['topic_name'],
+                  }))
+              .toList()
+          : const [],
+    );
+  }
+
+  final int id;
+  final String name;
+  final int totalReviews;
+  final TopicSentimentBreakdown sentiment;
+  final List<DestinationTopic> topics;
 }
 
 class TopicSentimentBreakdown {

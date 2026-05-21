@@ -44,7 +44,7 @@ class _Fallback extends StatelessWidget {
       child: Container(
         color: const Color(0xFFFFEEDB),
         alignment: Alignment.center,
-        child: const Icon(LucideIcons.image, color: AppColors.primary),
+        child: const Icon(LucideIcons.image, color: AppColors.explore),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -335,9 +337,9 @@ class _ProfileHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3EC),
+        color: AppColors.surfaceWarm,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFFFD0BA)),
+        border: Border.all(color: AppColors.explore.withValues(alpha: .22)),
       ),
       child: Row(
         children: [
@@ -346,15 +348,16 @@ class _ProfileHeader extends StatelessWidget {
             height: 72,
             child: GestureDetector(
               onTap: avatarUrl.isEmpty
-                  ? null
-                  : () => showImagePreview(
-                        context,
-                        imageUrl: avatarUrl,
-                        title: 'Foto profile saat ini',
-                      ),
+                      ? null
+                      : () => showImagePreview(
+                            context,
+                            imageUrl: avatarUrl,
+                            title: 'Foto profile saat ini',
+                            circular: true,
+                          ),
               child: AppCachedImage(
                 imageUrl: avatarUrl,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
           ),
@@ -443,19 +446,19 @@ class _FavoriteStats extends StatelessWidget {
               label: 'Kota utama',
               value: topCity,
               icon: LucideIcons.mapPin,
-              color: AppColors.secondary,
+              color: AppColors.explore,
             ),
             IconMetricCard(
               label: 'Skor vibe',
               value: scoreLabel(averageScore),
               icon: LucideIcons.sparkles,
-              color: AppColors.primary,
+              color: AppColors.ai,
             ),
             IconMetricCard(
               label: 'Rating rata-rata',
               value: ratingLabel(averageRating),
               icon: LucideIcons.star,
-              color: AppColors.warning,
+              color: AppColors.neutral,
             ),
           ],
         ),
@@ -555,10 +558,11 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
                               context,
                               imageUrl: avatarUrl,
                               title: 'Foto profile saat ini',
+                              circular: true,
                             ),
                     child: AppCachedImage(
                       imageUrl: avatarUrl,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(999),
                     ),
                   ),
                 ),
@@ -690,6 +694,10 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
       maxWidth: 1200,
     );
     if (image == null) return;
+    if (!mounted) return;
+
+    final confirmed = await _confirmCircularAvatar(image);
+    if (confirmed != true) return;
 
     setState(() {
       _uploading = true;
@@ -705,6 +713,79 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
+  }
+
+  Future<bool?> _confirmCircularAvatar(XFile image) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Pratinjau foto profil',
+                  style: AppTextStyles.sectionTitle,
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Foto akan ditampilkan dalam bentuk lingkaran.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body,
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: 180,
+                  height: 180,
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.surfaceWarm,
+                    border: Border.all(
+                      color: AppColors.explore.withValues(alpha: .24),
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.file(
+                      File(image.path),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: 'Ganti foto',
+                        icon: LucideIcons.rotateCcw,
+                        isSecondary: true,
+                        onPressed: () => Navigator.of(context).pop(false),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppButton(
+                        label: 'Gunakan',
+                        icon: LucideIcons.check,
+                        onPressed: () => Navigator.of(context).pop(true),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

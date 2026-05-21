@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/app_colors.dart';
+import '../constants/destination_categories.dart';
 import '../utils/formatters.dart';
 import 'app_cached_image.dart';
 
@@ -15,6 +16,7 @@ class DestinationCardData {
     this.positiveRatio,
     this.score,
     this.googleRating,
+    this.category,
     this.topics = const [],
   });
 
@@ -25,6 +27,7 @@ class DestinationCardData {
   final num? positiveRatio;
   final num? score;
   final num? googleRating;
+  final String? category;
   final List<String> topics;
 }
 
@@ -70,12 +73,12 @@ class DestinationCard extends StatelessWidget {
                         _ImageBadge(
                           icon: LucideIcons.sparkles,
                           label: 'Skor ${scoreLabel(destination.score)}',
-                          color: AppColors.primary,
+                          color: AppColors.ai,
                         ),
                         _ImageBadge(
                           icon: LucideIcons.star,
                           label: ratingLabel(destination.googleRating),
-                          color: AppColors.warning,
+                        color: AppColors.neutral,
                         ),
                       ],
                     ),
@@ -103,7 +106,7 @@ class DestinationCard extends StatelessWidget {
                       const Icon(
                         LucideIcons.mapPin,
                         size: 16,
-                        color: AppColors.primary,
+                        color: AppColors.explore,
                       ),
                       const SizedBox(width: 6),
                       Expanded(
@@ -124,12 +127,20 @@ class DestinationCard extends StatelessWidget {
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      for (final topic in destination.topics.take(3))
+                      Chip(
+                        label: Text(destinationCategoryLabel(destination.category)),
+                        visualDensity: VisualDensity.compact,
+                        side: BorderSide.none,
+                        backgroundColor: AppColors.surfaceWarm,
+                      ),
+                      for (final entry in destination.topics.take(3).indexed)
                         Chip(
-                          label: Text(topic),
+                          label: Text(
+                            entry.$1 == 0 ? 'Top topik: ${entry.$2}' : entry.$2,
+                          ),
                           visualDensity: VisualDensity.compact,
                           side: BorderSide.none,
-                          backgroundColor: const Color(0xFFF1F5F9),
+                          backgroundColor: AppColors.surfaceCool,
                         ),
                     ],
                   ),
@@ -139,13 +150,13 @@ class DestinationCard extends StatelessWidget {
                       const Icon(
                         LucideIcons.thumbsUp,
                         size: 16,
-                        color: AppColors.secondary,
+                        color: AppColors.positive,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'Positif ${percentLabel(destination.positiveRatio)}',
                         style: const TextStyle(
-                          color: AppColors.secondary,
+                          color: AppColors.positive,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -153,7 +164,7 @@ class DestinationCard extends StatelessWidget {
                       const Icon(
                         LucideIcons.arrowUpRight,
                         size: 17,
-                        color: AppColors.primary,
+                        color: AppColors.explore,
                       ),
                     ],
                   ),

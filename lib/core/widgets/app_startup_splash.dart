@@ -65,7 +65,7 @@ class _AppStartupSplashState extends State<AppStartupSplash>
                 end: Alignment.bottomCenter,
                 colors: [
                   Color(0xF7F8FAFC),
-                  Color(0xF2FFF3EC),
+                  AppColors.surfaceWarm,
                   Color(0xFAF8FAFC),
                 ],
               ),
@@ -76,7 +76,7 @@ class _AppStartupSplashState extends State<AppStartupSplash>
             right: -90,
             child: _GlowOrb(
               size: 220,
-              color: AppColors.primary.withValues(alpha: .22),
+              color: AppColors.explore.withValues(alpha: .22),
             ),
           ),
           Positioned(
@@ -84,7 +84,7 @@ class _AppStartupSplashState extends State<AppStartupSplash>
             left: -80,
             child: _GlowOrb(
               size: 240,
-              color: AppColors.secondary.withValues(alpha: .18),
+              color: AppColors.ai.withValues(alpha: .18),
             ),
           ),
           SafeArea(
@@ -168,7 +168,7 @@ class _AssetBackgroundFallback extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFFFF3EC),
+            AppColors.surfaceWarm,
             AppColors.background,
             Color(0xFFEAF6FB),
           ],
@@ -198,10 +198,10 @@ class _RingPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..shader = const SweepGradient(
         colors: [
-          AppColors.primary,
-          AppColors.secondary,
+          AppColors.explore,
+          AppColors.ai,
           Color(0xFFFFD0BA),
-          AppColors.primary,
+          AppColors.explore,
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
 
@@ -265,12 +265,12 @@ class _LoadingSteps extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: .82),
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFFFD0BA)),
+              border: Border.all(color: AppColors.explore.withValues(alpha: .22)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(item.$1, size: 15, color: AppColors.primary),
+                Icon(item.$1, size: 15, color: AppColors.explore),
                 const SizedBox(width: 6),
                 Text(
                   item.$2,

@@ -21,6 +21,8 @@ class ApiEndpoints {
       '/api/destinations/slug/$slug';
   static String destinationReviewsByTopic(int id) =>
       '/api/destinations/$id/reviews-by-topic';
+  static String destinationReviewsByTopicGroup(int id) =>
+      '/api/destinations/$id/reviews-by-topic-group';
   static String favoriteCheck(int id) => '/api/favorites/check/$id';
   static String favoriteByDestination(int id) => '/api/favorites/$id';
 }

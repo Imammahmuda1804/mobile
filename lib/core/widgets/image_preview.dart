@@ -9,6 +9,7 @@ void showImagePreview(
   required String imageUrl,
   String title = 'Preview foto',
   bool showHeader = true,
+  bool circular = false,
 }) {
   if (imageUrl.trim().isEmpty) return;
 
@@ -28,7 +29,7 @@ void showImagePreview(
               if (showHeader) ...[
                 Row(
                   children: [
-                    const Icon(LucideIcons.image, color: AppColors.primary),
+                    const Icon(LucideIcons.image, color: AppColors.explore),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -51,12 +52,21 @@ void showImagePreview(
                 aspectRatio: 1,
                 child: GestureDetector(
                   onTap: showHeader ? null : () => Navigator.of(context).pop(),
-                  child: AppCachedImage(
-                    imageUrl: imageUrl,
-                    borderRadius: BorderRadius.circular(showHeader ? 22 : 28),
-                    fit: BoxFit.contain,
+                  child: circular
+                      ? ClipOval(
+                          child: AppCachedImage(
+                            imageUrl: imageUrl,
+                            borderRadius: BorderRadius.zero,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : AppCachedImage(
+                          imageUrl: imageUrl,
+                          borderRadius:
+                              BorderRadius.circular(showHeader ? 22 : 28),
+                          fit: BoxFit.contain,
+                        ),
                   ),
-                ),
               ),
             ],
           ),

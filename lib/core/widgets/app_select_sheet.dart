@@ -159,7 +159,7 @@ class _SelectOptionTile<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? const Color(0xFFFFF3EC) : const Color(0xFFF8FAFC),
+      color: selected ? AppColors.surfaceWarm : AppColors.background,
       borderRadius: BorderRadius.circular(18),
       child: ListTile(
         minVerticalPadding: 12,
@@ -173,13 +173,13 @@ class _SelectOptionTile<T> extends StatelessWidget {
           width: 34,
           height: 34,
           decoration: BoxDecoration(
-            color: selected ? AppColors.primary : Colors.white,
+            color: selected ? AppColors.explore : Colors.white,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             option.icon ?? LucideIcons.circle,
             size: 17,
-            color: selected ? Colors.white : AppColors.primary,
+            color: selected ? Colors.white : AppColors.explore,
           ),
         ),
         title: Text(
@@ -194,7 +194,7 @@ class _SelectOptionTile<T> extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
         trailing: selected
-            ? const Icon(LucideIcons.check, color: AppColors.primary)
+            ? const Icon(LucideIcons.check, color: AppColors.explore)
             : null,
         onTap: () => Navigator.of(context).pop(option.value),
       ),

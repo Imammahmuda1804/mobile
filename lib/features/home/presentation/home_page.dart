@@ -182,7 +182,7 @@ class _HeroLanding extends StatelessWidget {
                   const InfoPill(
                     label: 'AI Tourism Intelligence',
                     icon: LucideIcons.sparkles,
-                    color: AppColors.primary,
+                    color: AppColors.ai,
                     background: Colors.white,
                   ),
                   const SizedBox(height: 14),
@@ -243,8 +243,8 @@ class _HeroLanding extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 22),
-                  const _HeroTrustStrip(),
+                  const SizedBox(height: 16),
+                  const _HeroSignalLine(),
                 ],
               ),
             ),
@@ -275,7 +275,7 @@ class _HeroSearchBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(LucideIcons.compass, color: AppColors.primary),
+          const Icon(LucideIcons.compass, color: AppColors.explore),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -301,58 +301,62 @@ class _HeroSearchBar extends StatelessWidget {
   }
 }
 
-class _HeroTrustStrip extends StatelessWidget {
-  const _HeroTrustStrip();
+class _HeroSignalLine extends StatelessWidget {
+  const _HeroSignalLine();
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      ('82%', 'positif kuat'),
-      ('6+', 'kategori vibe'),
-      ('AI', 'ringkasan ulasan'),
-    ];
-
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        for (var i = 0; i < items.length; i++) ...[
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .12),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withValues(alpha: .18)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    items[i].$1,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 21,
-                      height: 1,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    items[i].$2,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
+        _HeroSignalPill(
+          icon: LucideIcons.sparkles,
+          label: 'AI membaca ulasan',
+        ),
+        _HeroSignalPill(
+          icon: LucideIcons.mapPinned,
+          label: 'Fokus Sumatera Barat',
+        ),
+        _HeroSignalPill(
+          icon: LucideIcons.gitCompareArrows,
+          label: 'Bisa dibandingkan',
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroSignalPill extends StatelessWidget {
+  const _HeroSignalPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: .18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 15),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          if (i != items.length - 1) const SizedBox(width: 8),
         ],
-      ],
+      ),
     );
   }
 }
@@ -367,19 +371,19 @@ class _SignalCards extends StatelessWidget {
         LucideIcons.sparkles,
         'AI sentiment',
         'Membaca nada positif, netral, dan negatif dari ulasan.',
-        AppColors.primary,
+        AppColors.ai,
       ),
       (
         LucideIcons.chartBar,
         'Topic modelling',
         'Mengubah banyak komentar menjadi peta topik perjalanan.',
-        AppColors.secondary,
+        AppColors.ai,
       ),
       (
         LucideIcons.mapPinned,
         'Fokus lokal',
         'Dibangun untuk eksplorasi destinasi Sumatera Barat.',
-        AppColors.success,
+        AppColors.explore,
       ),
     ];
 
@@ -436,9 +440,9 @@ class _InsightPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3EC),
+        color: AppColors.surfaceCool,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFFFD0BA)),
+        border: Border.all(color: AppColors.ai.withValues(alpha: .18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,14 +457,14 @@ class _InsightPanel extends StatelessWidget {
             label: 'Positif',
             value: 'Kuat',
             width: .82,
-            color: AppColors.primary,
+            color: AppColors.positive,
           ),
           const SizedBox(height: 14),
           const _SentimentMeter(
             label: 'Netral',
             value: 'Seimbang',
             width: .48,
-            color: AppColors.secondary,
+            color: AppColors.ai,
           ),
           const SizedBox(height: 14),
           const _SentimentMeter(
@@ -559,7 +563,7 @@ class _BentoActionGrid extends StatelessWidget {
               child: _MiniBentoCard(
                 icon: LucideIcons.gitCompareArrows,
                 title: 'Bandingkan vibe',
-                color: AppColors.primary,
+                color: AppColors.explore,
                 onTap: () => context.go('/compare'),
               ),
             ),
@@ -568,7 +572,7 @@ class _BentoActionGrid extends StatelessWidget {
               child: _MiniBentoCard(
                 icon: LucideIcons.heart,
                 title: 'Simpan pilihan',
-                color: AppColors.secondary,
+                color: AppColors.ai,
                 onTap: () => context.go('/profile'),
               ),
             ),
@@ -608,7 +612,7 @@ class _BentoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primary, size: 32),
+          Icon(icon, color: AppColors.explore, size: 32),
           const SizedBox(height: 18),
           Text(
             title,
@@ -801,7 +805,7 @@ class _FeaturedDestination extends StatelessWidget {
                         label:
                             'Skor ${item.recommendationScore == null ? 'N/A' : (item.recommendationScore! * 100).round()}',
                         icon: LucideIcons.sparkles,
-                        color: AppColors.secondary,
+                        color: AppColors.ai,
                       ),
                     ],
                   ),
@@ -829,7 +833,7 @@ class _RecommendationError extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Icon(LucideIcons.wifiOff, color: AppColors.primary),
+          Icon(LucideIcons.wifiOff, color: AppColors.explore),
           SizedBox(width: 12),
           Expanded(
             child: Text(

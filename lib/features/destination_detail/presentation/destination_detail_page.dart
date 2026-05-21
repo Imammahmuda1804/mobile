@@ -366,13 +366,13 @@ class _MetricGrid extends StatelessWidget {
               label: 'Skor AI',
               value: scoreLabel(destination.recommendationScore),
               icon: LucideIcons.sparkles,
-              color: AppColors.primary,
+              color: AppColors.ai,
             ),
             IconMetricCard(
               label: 'Sentimen positif',
               value: percentLabel(destination.positiveRatio),
               icon: LucideIcons.thumbsUp,
-              color: AppColors.success,
+              color: AppColors.positive,
             ),
             IconMetricCard(
               label: 'Rating Google',
@@ -381,7 +381,7 @@ class _MetricGrid extends StatelessWidget {
                   ? null
                   : '${destination.googleReviewCount!.round()} review',
               icon: LucideIcons.star,
-              color: AppColors.warning,
+              color: AppColors.neutral,
             ),
             IconMetricCard(
               label: 'Rating ulasan terolah',
@@ -390,14 +390,14 @@ class _MetricGrid extends StatelessWidget {
                   ? null
                   : '${destination.scrapedReviewCount} ulasan',
               icon: LucideIcons.chartNoAxesColumn,
-              color: AppColors.secondary,
+              color: AppColors.ai,
             ),
             IconMetricCard(
               label: 'Rating RanahInsight',
               value: ratingLabel(destination.averageUserRating),
               helper: '${destination.totalUserReviews} ulasan user',
               icon: LucideIcons.usersRound,
-              color: AppColors.primary,
+              color: AppColors.explore,
             ),
             IconMetricCard(
               label: 'Review user',
@@ -405,7 +405,7 @@ class _MetricGrid extends StatelessWidget {
                   ? destination.totalUserReviews.toString()
                   : destination.userReviews.length.toString(),
               icon: LucideIcons.messageSquareText,
-              color: AppColors.secondary,
+              color: AppColors.ai,
             ),
           ],
         );
@@ -451,7 +451,7 @@ class _DecisionCards extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(item.$1, color: AppColors.primary),
+                Icon(item.$1, color: AppColors.ai),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -537,14 +537,22 @@ class _TopicInsightSectionState extends State<_TopicInsightSection> {
 
   @override
   Widget build(BuildContext context) {
+    final hasGroups = widget.destination.topicGroups.isNotEmpty;
+    final groups = widget.destination.topicGroups.where((group) {
+      if (_filter == 'all') return true;
+      return _topicTone(group.sentiment).key == _filter;
+    }).toList();
     final topics = widget.destination.topics.where((topic) {
       if (_filter == 'all') return true;
       return _topicTone(widget.destination.topicSentiments[topic.id]).key ==
           _filter;
     }).toList();
+    final itemCount = hasGroups ? groups.length : topics.length;
     final visibleTopics =
         _showAllTopics ? topics : topics.take(4).toList(growable: false);
-    final hiddenCount = topics.length - visibleTopics.length;
+    final visibleGroups =
+        _showAllTopics ? groups : groups.take(4).toList(growable: false);
+    final hiddenCount = itemCount - (hasGroups ? visibleGroups.length : visibleTopics.length);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,26 +591,39 @@ class _TopicInsightSectionState extends State<_TopicInsightSection> {
           ),
         ),
         const SizedBox(height: 12),
-        if (topics.isEmpty)
+        if (itemCount == 0)
           const EmptyState(
             title: 'Topik tidak ditemukan',
             message: 'Tidak ada topik dengan filter sentimen ini.',
             icon: LucideIcons.filterX,
           )
         else ...[
-          for (final topic in visibleTopics) ...[
-            _TopicInsightCard(
-              topic: topic,
-              breakdown: widget.destination.topicSentiments[topic.id],
-              onTap: () => _showTopicReviews(
-                context,
-                destination: widget.destination,
-                topic: topic,
+          if (hasGroups)
+            for (final group in visibleGroups) ...[
+              _TopicGroupInsightCard(
+                group: group,
+                onTap: () => _showTopicReviews(
+                  context,
+                  destination: widget.destination,
+                  group: group,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-          ],
-          if (topics.length > 4)
+              const SizedBox(height: 10),
+            ]
+          else
+            for (final topic in visibleTopics) ...[
+              _TopicInsightCard(
+                topic: topic,
+                breakdown: widget.destination.topicSentiments[topic.id],
+                onTap: () => _showTopicReviews(
+                  context,
+                  destination: widget.destination,
+                  topic: topic,
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          if (itemCount > 4)
             OutlinedButton.icon(
               onPressed: () => setState(() => _showAllTopics = !_showAllTopics),
               icon: Icon(
@@ -628,9 +649,9 @@ class _TopicLegend extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8F3),
+        color: AppColors.surfaceCool,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFFFD0BA)),
+        border: Border.all(color: AppColors.ai.withValues(alpha: .18)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,17 +668,17 @@ class _TopicLegend extends StatelessWidget {
               InfoPill(
                 label: 'Positif: mayoritas ulasan bernada baik',
                 icon: LucideIcons.thumbsUp,
-                color: AppColors.success,
+                color: AppColors.positive,
               ),
               InfoPill(
                 label: 'Seimbang: sentimen relatif campur',
                 icon: LucideIcons.scale,
-                color: AppColors.secondary,
+                color: AppColors.ai,
               ),
               InfoPill(
                 label: 'Perlu dicek: negatif lebih menonjol',
                 icon: LucideIcons.triangleAlert,
-                color: AppColors.danger,
+                color: AppColors.negative,
               ),
             ],
           ),
@@ -687,20 +708,21 @@ class _TopicFilterChip extends StatelessWidget {
       child: ChoiceChip(
         selected: selected,
         showCheckmark: false,
-        selectedColor: const Color(0xFFFFE8DC),
+        selectedColor: AppColors.surfaceCool,
         backgroundColor: Colors.white,
         side: BorderSide(
-          color: selected ? const Color(0xFFFFB38F) : AppColors.border,
+          color:
+              selected ? AppColors.ai.withValues(alpha: .45) : AppColors.border,
         ),
         labelStyle: TextStyle(
-          color: selected ? AppColors.primary : AppColors.text,
+          color: selected ? AppColors.ai : AppColors.text,
           fontWeight: FontWeight.w900,
         ),
         label: Text(label),
         avatar: Icon(
           icon,
           size: 16,
-          color: selected ? AppColors.primary : AppColors.muted,
+          color: selected ? AppColors.ai : AppColors.muted,
         ),
         onSelected: (_) => onTap(),
       ),
@@ -787,17 +809,17 @@ class _TopicInsightCard extends StatelessWidget {
                     _SentimentSegment(
                       count: positive,
                       total: total,
-                      color: AppColors.success,
+                      color: AppColors.positive,
                     ),
                     _SentimentSegment(
                       count: neutral,
                       total: total,
-                      color: AppColors.secondary,
+                      color: AppColors.neutral,
                     ),
                     _SentimentSegment(
                       count: negative,
                       total: total,
-                      color: AppColors.danger,
+                      color: AppColors.negative,
                     ),
                   ],
                 ),
@@ -809,6 +831,116 @@ class _TopicInsightCard extends StatelessWidget {
                   color: AppColors.muted,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TopicGroupInsightCard extends StatelessWidget {
+  const _TopicGroupInsightCard({
+    required this.group,
+    required this.onTap,
+  });
+
+  final TopicGroupInsight group;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = _topicTone(group.sentiment);
+    final total = group.sentiment.total;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: onTap,
+      child: Ink(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: tone.color.withValues(alpha: .35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: tone.color.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(tone.icon, color: tone.color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      Text(
+                        '${group.totalReviews} ulasan dari ${group.topics.length} topik sempit',
+                        style: AppTextStyles.body,
+                      ),
+                    ],
+                  ),
+                ),
+                InfoPill(
+                  label: tone.label,
+                  icon: tone.icon,
+                  color: tone.color,
+                ),
+              ],
+            ),
+            if (group.topics.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final topic in group.topics.take(5))
+                    InfoPill(
+                      label: topic.name,
+                      icon: LucideIcons.tag,
+                      color: AppColors.ai,
+                    ),
+                ],
+              ),
+            ],
+            if (total > 0) ...[
+              const SizedBox(height: 14),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: Row(
+                  children: [
+                    _SentimentSegment(
+                      count: group.sentiment.positive,
+                      total: total,
+                      color: AppColors.positive,
+                    ),
+                    _SentimentSegment(
+                      count: group.sentiment.neutral,
+                      total: total,
+                      color: AppColors.neutral,
+                    ),
+                    _SentimentSegment(
+                      count: group.sentiment.negative,
+                      total: total,
+                      color: AppColors.negative,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -862,7 +994,7 @@ class _SentimentSegment extends StatelessWidget {
       key: 'balanced',
       label: 'Seimbang',
       icon: LucideIcons.scale,
-      color: AppColors.secondary,
+      color: AppColors.ai,
     );
   }
   if (breakdown.negative > breakdown.positive &&
@@ -871,7 +1003,7 @@ class _SentimentSegment extends StatelessWidget {
       key: 'negative',
       label: 'Perlu dicek',
       icon: LucideIcons.triangleAlert,
-      color: AppColors.danger,
+      color: AppColors.negative,
     );
   }
   if (breakdown.positive >= breakdown.neutral) {
@@ -879,14 +1011,14 @@ class _SentimentSegment extends StatelessWidget {
       key: 'positive',
       label: 'Positif',
       icon: LucideIcons.thumbsUp,
-      color: AppColors.success,
+      color: AppColors.positive,
     );
   }
   return (
     key: 'balanced',
     label: 'Seimbang',
     icon: LucideIcons.scale,
-    color: AppColors.secondary,
+    color: AppColors.ai,
   );
 }
 
@@ -988,12 +1120,11 @@ class _GallerySectionState extends State<_GallerySection> {
                   width: selectedThumb ? 92 : 76,
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color:
-                        selectedThumb ? const Color(0xFFFFE8DC) : Colors.white,
+                    color: selectedThumb ? AppColors.surfaceWarm : Colors.white,
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: selectedThumb
-                          ? const Color(0xFFFFB38F)
+                          ? AppColors.explore.withValues(alpha: .38)
                           : AppColors.border,
                       width: selectedThumb ? 2 : 1,
                     ),
@@ -1035,24 +1166,25 @@ class _ReviewTile extends StatelessWidget {
                         context,
                         imageUrl: avatarUrl,
                         showHeader: false,
+                        circular: true,
                       ),
               child: SizedBox(
                 width: 44,
                 height: 44,
                 child: avatarUrl.isEmpty
                     ? CircleAvatar(
-                        backgroundColor: const Color(0xFFFFE8DC),
+                        backgroundColor: AppColors.surfaceWarm,
                         child: Text(
                           review.userName.isEmpty ? 'P' : review.userName[0],
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: AppColors.explore,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                       )
                     : AppCachedImage(
                         imageUrl: avatarUrl,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(999),
                       ),
               ),
             ),
@@ -1073,7 +1205,7 @@ class _ReviewTile extends StatelessWidget {
                           LucideIcons.star,
                           size: 14,
                           color: i <= review.rating
-                              ? AppColors.warning
+                              ? AppColors.neutral
                               : AppColors.border,
                         ),
                       const SizedBox(width: 8),
@@ -1101,7 +1233,8 @@ class _ReviewTile extends StatelessWidget {
 void _showTopicReviews(
   BuildContext context, {
   required DestinationDetail destination,
-  required DestinationTopic topic,
+  DestinationTopic? topic,
+  TopicGroupInsight? group,
 }) {
   showModalBottomSheet<void>(
     context: context,
@@ -1110,6 +1243,7 @@ void _showTopicReviews(
     builder: (_) => _TopicReviewsSheet(
       destinationId: destination.id,
       topic: topic,
+      group: group,
     ),
   );
 }
@@ -1117,11 +1251,13 @@ void _showTopicReviews(
 class _TopicReviewsSheet extends ConsumerStatefulWidget {
   const _TopicReviewsSheet({
     required this.destinationId,
-    required this.topic,
+    this.topic,
+    this.group,
   });
 
   final int destinationId;
-  final DestinationTopic topic;
+  final DestinationTopic? topic;
+  final TopicGroupInsight? group;
 
   @override
   ConsumerState<_TopicReviewsSheet> createState() => _TopicReviewsSheetState();
@@ -1133,10 +1269,17 @@ class _TopicReviewsSheetState extends ConsumerState<_TopicReviewsSheet> {
   @override
   void initState() {
     super.initState();
-    _future = ref.read(destinationRepositoryProvider).fetchReviewsByTopic(
-          destinationId: widget.destinationId,
-          topicId: widget.topic.id,
-        );
+    final group = widget.group;
+    final topic = widget.topic;
+    _future = group != null
+        ? ref.read(destinationRepositoryProvider).fetchReviewsByTopicGroup(
+              destinationId: widget.destinationId,
+              groupId: group.id,
+            )
+        : ref.read(destinationRepositoryProvider).fetchReviewsByTopic(
+              destinationId: widget.destinationId,
+              topicId: topic?.id ?? 0,
+            );
   }
 
   @override
@@ -1158,9 +1301,11 @@ class _TopicReviewsSheetState extends ConsumerState<_TopicReviewsSheet> {
             children: [
               AppSectionHeader(
                 icon: LucideIcons.messagesSquare,
-                title: 'Ulasan topik ${widget.topic.name}',
+                title: 'Ulasan topik ${widget.group?.name ?? widget.topic?.name ?? ''}',
                 subtitle:
-                    'Cuplikan ulasan wisatawan yang berkaitan dengan topik ini.',
+                    widget.group == null
+                        ? 'Cuplikan ulasan wisatawan yang berkaitan dengan topik ini.'
+                        : 'Cuplikan ulasan dari semua topik sempit di dalam grup ini.',
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -1212,8 +1357,8 @@ class _TopicReviewTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final sentiment = review.sentiment?.toLowerCase() ?? '';
     final sentimentColor = switch (sentiment) {
-      'positive' || 'positif' => AppColors.success,
-      'negative' || 'negatif' => AppColors.danger,
+      'positive' || 'positif' => AppColors.positive,
+      'negative' || 'negatif' => AppColors.negative,
       _ => AppColors.muted,
     };
 
@@ -1255,7 +1400,7 @@ class _TopicReviewTile extends StatelessWidget {
                   LucideIcons.star,
                   size: 14,
                   color: i <= (review.rating ?? 0).round()
-                      ? AppColors.warning
+                      ? AppColors.neutral
                       : AppColors.border,
                 ),
               const SizedBox(width: 8),
@@ -1376,7 +1521,7 @@ class _ReviewFormState extends ConsumerState<_ReviewForm> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: AppColors.danger)),
+              Text(_error!, style: const TextStyle(color: AppColors.negative)),
             ],
             const SizedBox(height: 14),
             AppButton(
@@ -1417,10 +1562,10 @@ class _RatingStarButton extends StatelessWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFFFFF7D6) : const Color(0xFFF8FAFC),
+            color: selected ? AppColors.surfaceWarning : AppColors.background,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? const Color(0xFFF5C542) : AppColors.border,
+              color: selected ? AppColors.neutral : AppColors.border,
               width: selected ? 2 : 1,
             ),
             boxShadow: selected
@@ -1437,7 +1582,7 @@ class _RatingStarButton extends StatelessWidget {
             child: Icon(
               selected ? Icons.star_rounded : Icons.star_border_rounded,
               size: 32,
-              color: selected ? AppColors.warning : AppColors.muted,
+              color: selected ? AppColors.neutral : AppColors.muted,
             ),
           ),
         ),

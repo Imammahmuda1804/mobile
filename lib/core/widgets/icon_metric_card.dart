@@ -8,7 +8,7 @@ class IconMetricCard extends StatelessWidget {
     required this.value,
     required this.icon,
     this.helper,
-    this.color = AppColors.primary,
+    this.color = AppColors.explore,
     super.key,
   });
 

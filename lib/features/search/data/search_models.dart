@@ -22,6 +22,7 @@ class DestinationSummary {
     required this.name,
     required this.slug,
     required this.city,
+    required this.category,
     required this.imageUrl,
     this.province,
     this.description,
@@ -39,6 +40,7 @@ class DestinationSummary {
       name: json['name']?.toString() ?? '',
       slug: json['slug']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
+      category: json['category']?.toString() ?? 'alam',
       province: json['province']?.toString(),
       imageUrl: resolveImageUrl(
         (json['thumbnailUrl'] ?? json['thumbnail_url'] ?? json['imageUrl'])
@@ -67,6 +69,7 @@ class DestinationSummary {
   final String name;
   final String slug;
   final String city;
+  final String category;
   final String? province;
   final String imageUrl;
   final String? description;

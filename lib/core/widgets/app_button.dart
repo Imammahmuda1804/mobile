@@ -20,7 +20,7 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = isSecondary ? Colors.white : AppColors.primary;
+    final background = isSecondary ? Colors.white : AppColors.explore;
     final foreground = isSecondary ? AppColors.text : Colors.white;
 
     return SizedBox(

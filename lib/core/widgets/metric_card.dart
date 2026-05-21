@@ -7,7 +7,7 @@ class MetricCard extends StatelessWidget {
     required this.label,
     required this.value,
     this.helper,
-    this.color = AppColors.primary,
+    this.color = AppColors.explore,
     super.key,
   });
 

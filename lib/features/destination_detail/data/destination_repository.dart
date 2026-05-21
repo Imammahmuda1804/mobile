@@ -78,6 +78,33 @@ class DestinationRepository {
     }
   }
 
+  Future<List<ScrapedTopicReview>> fetchReviewsByTopicGroup({
+    required int destinationId,
+    required int groupId,
+    int limit = 10,
+  }) async {
+    try {
+      final response = await _dio.get<dynamic>(
+        ApiEndpoints.destinationReviewsByTopicGroup(destinationId),
+        queryParameters: {
+          'groupId': groupId,
+          'page': 1,
+          'limit': limit,
+        },
+      );
+      final data = unwrapData(response);
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(ScrapedTopicReview.fromJson)
+            .toList();
+      }
+      return const [];
+    } catch (error) {
+      throw mapDioError(error);
+    }
+  }
+
   Future<void> submitReview({
     required int destinationId,
     required int rating,
