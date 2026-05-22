@@ -21,6 +21,12 @@ final citiesProvider = FutureProvider<List<String>>((ref) {
   return ref.read(searchRepositoryProvider).fetchCities();
 });
 
+// Memuat kategori destinasi dari backend dengan fallback lokal.
+final categoriesProvider =
+    FutureProvider<List<DestinationCategoryOption>>((ref) {
+  return ref.read(searchRepositoryProvider).fetchCategories();
+});
+
 // Memuat riwayat search hanya untuk user login.
 final searchHistoryProvider = FutureProvider<List<String>>((ref) {
   final auth = ref.watch(authControllerProvider);
@@ -114,6 +120,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final cities = ref.watch(citiesProvider);
+    final categories = ref.watch(categoriesProvider);
     final history = ref.watch(searchHistoryProvider);
 
     return SafeArea(
@@ -126,6 +133,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             selectedCategory: _selectedCategory,
             selectedCity: _selectedCity,
             cities: cities,
+            categories: categories,
             onSearch: _search,
             onModeChanged: (value) {
               setState(() => _semanticMode = value);
@@ -253,6 +261,7 @@ class _SearchCommandSurface extends StatelessWidget {
     required this.selectedCategory,
     required this.selectedCity,
     required this.cities,
+    required this.categories,
     required this.onSearch,
     required this.onModeChanged,
     required this.onCategoryChanged,
@@ -264,6 +273,7 @@ class _SearchCommandSurface extends StatelessWidget {
   final String selectedCategory;
   final String selectedCity;
   final AsyncValue<List<String>> cities;
+  final AsyncValue<List<DestinationCategoryOption>> categories;
   final VoidCallback onSearch;
   final ValueChanged<bool> onModeChanged;
   final ValueChanged<String> onCategoryChanged;
@@ -358,36 +368,22 @@ class _SearchCommandSurface extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final twoColumns = constraints.maxWidth >= 420;
-              final categoryButton = _FilterButton(
-                icon: LucideIcons.layers,
-                tone: AppColors.explore,
-                label: selectedCategory.isEmpty
-                    ? 'Semua kategori'
-                    : destinationCategoryLabel(selectedCategory),
-                onTap: () async {
-                  final value = await showAppSelectSheet<String>(
-                    context: context,
-                    title: 'Pilih kategori',
-                    selectedValue: selectedCategory,
-                    searchable: true,
-                    searchHint: 'Cari kategori destinasi',
-                    options: [
-                      const SelectOption(
-                        value: '',
-                        label: 'Semua kategori',
-                        icon: LucideIcons.layers,
-                      ),
-                      for (final category in destinationCategories)
-                        SelectOption(
-                          value: category.value,
-                          label: category.label,
-                          icon: LucideIcons.tag,
-                        ),
-                    ],
-                  );
-                  if (value == null) return;
-                  onCategoryChanged(value);
-                },
+              final categoryButton = categories.when(
+                data: (items) => _CategoryFilterButton(
+                  selectedCategory: selectedCategory,
+                  categories: items,
+                  onCategoryChanged: onCategoryChanged,
+                ),
+                loading: () => const _FilterButton(
+                  icon: LucideIcons.layers,
+                  tone: AppColors.explore,
+                  label: 'Memuat kategori',
+                ),
+                error: (_, __) => _CategoryFilterButton(
+                  selectedCategory: selectedCategory,
+                  categories: destinationCategories,
+                  onCategoryChanged: onCategoryChanged,
+                ),
               );
               final cityButton = cities.when(
                 data: (items) => _FilterButton(
@@ -448,17 +444,64 @@ class _SearchCommandSurface extends StatelessWidget {
   }
 }
 
+class _CategoryFilterButton extends StatelessWidget {
+  const _CategoryFilterButton({
+    required this.selectedCategory,
+    required this.categories,
+    required this.onCategoryChanged,
+  });
+
+  final String selectedCategory;
+  final List<DestinationCategoryOption> categories;
+  final ValueChanged<String> onCategoryChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return _FilterButton(
+      icon: LucideIcons.layers,
+      tone: AppColors.explore,
+      label: selectedCategory.isEmpty
+          ? 'Semua kategori'
+          : destinationCategoryLabel(selectedCategory),
+      onTap: () async {
+        final value = await showAppSelectSheet<String>(
+          context: context,
+          title: 'Pilih kategori',
+          selectedValue: selectedCategory,
+          searchable: true,
+          searchHint: 'Cari kategori destinasi',
+          options: [
+            const SelectOption(
+              value: '',
+              label: 'Semua kategori',
+              icon: LucideIcons.layers,
+            ),
+            for (final category in categories)
+              SelectOption(
+                value: category.value,
+                label: category.label,
+                icon: LucideIcons.tag,
+              ),
+          ],
+        );
+        if (value == null) return;
+        onCategoryChanged(value);
+      },
+    );
+  }
+}
+
 class _FilterButton extends StatelessWidget {
   const _FilterButton({
     required this.label,
     required this.icon,
-    required this.onTap,
+    this.onTap,
     this.tone = AppColors.explore,
   });
 
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color tone;
 
   @override

@@ -8,6 +8,7 @@ class ApiEndpoints {
   static const destinationRecommendations = '/api/destinations/recommendations';
   static const destinationRanking = '/api/destinations/ranking';
   static const destinationCities = '/api/destinations/cities';
+  static const destinationCategories = '/api/destinations/categories';
   static const search = '/api/search';
   static const searchHistory = '/api/search/history';
   static const topics = '/api/topics';

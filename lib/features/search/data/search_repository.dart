@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/config/api_endpoints.dart';
+import '../../../core/constants/destination_categories.dart';
 import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/dio_client.dart';
 import 'search_models.dart';
@@ -75,6 +76,36 @@ class SearchRepository {
       return (data['data'] as List).map((item) => item.toString()).toList();
     }
     return [];
+  }
+
+  Future<List<DestinationCategoryOption>> fetchCategories() async {
+    try {
+      final response = await _dio.get<dynamic>(
+        ApiEndpoints.destinationCategories,
+      );
+      final data = unwrapData(response);
+      final list = data is List
+          ? data
+          : data is Map<String, dynamic> && data['data'] is List
+              ? data['data'] as List
+              : const [];
+      final categories = list
+          .whereType<Map<String, dynamic>>()
+          .map(
+            (item) => DestinationCategoryOption(
+              value: item['value']?.toString() ?? '',
+              label: item['label']?.toString() ??
+                  item['value']?.toString() ??
+                  '',
+            ),
+          )
+          .where((item) => item.value.isNotEmpty && item.label.isNotEmpty)
+          .toList();
+
+      return categories.isEmpty ? destinationCategories : categories;
+    } catch (_) {
+      return destinationCategories;
+    }
   }
 
   Future<List<DestinationSummary>> fetchRecommendations() async {
