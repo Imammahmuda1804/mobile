@@ -28,7 +28,7 @@ final categoriesProvider =
 });
 
 // Memuat riwayat search hanya untuk user login.
-final searchHistoryProvider = FutureProvider<List<String>>((ref) {
+final searchHistoryProvider = FutureProvider<List<SearchHistoryItem>>((ref) {
   final auth = ref.watch(authControllerProvider);
   if (!auth.isAuthenticated) return const [];
   return ref.read(searchRepositoryProvider).fetchHistory();
@@ -117,6 +117,60 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     });
   }
 
+  Future<void> _deleteHistoryItem(SearchHistoryItem item) async {
+    final id = item.id;
+    if (id == null) return;
+
+    try {
+      await ref.read(searchRepositoryProvider).deleteHistoryItem(id);
+      ref.invalidate(searchHistoryProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Riwayat pencarian dihapus.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menghapus riwayat pencarian.')),
+      );
+    }
+  }
+
+  Future<void> _clearHistory() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bersihkan riwayat?'),
+        content: const Text('Semua riwayat pencarian akan dihapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Bersihkan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    try {
+      await ref.read(searchRepositoryProvider).clearHistory();
+      ref.invalidate(searchHistoryProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Riwayat pencarian dibersihkan.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membersihkan riwayat.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cities = ref.watch(citiesProvider);
@@ -152,20 +206,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           history.when(
             data: (items) => items.isEmpty
                 ? const SizedBox.shrink()
-                : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final item in items)
-                        ActionChip(
-                          avatar: const Icon(LucideIcons.history, size: 15),
-                          label: Text(item),
-                          onPressed: () {
-                            _queryController.text = item;
-                            _search();
-                          },
-                        ),
-                    ],
+                : _SearchHistoryChips(
+                    items: items,
+                    onSelect: (item) {
+                      _queryController.text = item.keyword;
+                      _search();
+                    },
+                    onDelete: _deleteHistoryItem,
+                    onClear: _clearHistory,
                   ),
             error: (_, __) => const SizedBox.shrink(),
             loading: () => const SizedBox.shrink(),
@@ -439,6 +487,125 @@ class _SearchCommandSurface extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SearchHistoryChips extends StatelessWidget {
+  const _SearchHistoryChips({
+    required this.items,
+    required this.onSelect,
+    required this.onDelete,
+    required this.onClear,
+  });
+
+  final List<SearchHistoryItem> items;
+  final ValueChanged<SearchHistoryItem> onSelect;
+  final Future<void> Function(SearchHistoryItem) onDelete;
+  final Future<void> Function() onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.history, size: 16, color: AppColors.ai),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Riwayat pencarian',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  onClear();
+                },
+                child: const Text('Bersihkan'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in items)
+                _HistoryChip(
+                  item: item,
+                  onSelect: () => onSelect(item),
+                  onDelete: item.id == null
+                      ? null
+                      : () {
+                          onDelete(item);
+                        },
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryChip extends StatelessWidget {
+  const _HistoryChip({
+    required this.item,
+    required this.onSelect,
+    this.onDelete,
+  });
+
+  final SearchHistoryItem item;
+  final VoidCallback onSelect;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceCool,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onSelect,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 12, right: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(LucideIcons.history, size: 14, color: AppColors.ai),
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 170),
+                child: Text(
+                  item.keyword,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (onDelete != null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  onPressed: onDelete,
+                  icon: const Icon(LucideIcons.x, size: 15),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -11,6 +11,26 @@ final searchRepositoryProvider = Provider<SearchRepository>((ref) {
   return SearchRepository(ref.read(dioProvider));
 });
 
+class SearchHistoryItem {
+  const SearchHistoryItem({
+    this.id,
+    required this.keyword,
+    this.createdAt,
+  });
+
+  final int? id;
+  final String keyword;
+  final String? createdAt;
+
+  factory SearchHistoryItem.fromJson(Map<String, dynamic> json) {
+    return SearchHistoryItem(
+      id: json['id'] is int ? json['id'] as int : int.tryParse('${json['id']}'),
+      keyword: (json['keyword'] ?? json['query'])?.toString() ?? '',
+      createdAt: json['createdAt']?.toString(),
+    );
+  }
+}
+
 // Repository API untuk keyword search, semantic search, kota, history, dan rekomendasi.
 class SearchRepository {
   const SearchRepository(this._dio);
@@ -120,17 +140,25 @@ class SearchRepository {
     }
   }
 
-  Future<List<String>> fetchHistory() async {
+  Future<List<SearchHistoryItem>> fetchHistory() async {
     try {
       final response = await _dio.get<dynamic>(ApiEndpoints.searchHistory);
       return _readList(response)
-          .map((item) => (item['keyword'] ?? item['query'])?.toString() ?? '')
-          .where((item) => item.isNotEmpty)
+          .map(SearchHistoryItem.fromJson)
+          .where((item) => item.keyword.isNotEmpty)
           .take(6)
           .toList();
     } catch (_) {
       return const [];
     }
+  }
+
+  Future<void> deleteHistoryItem(int id) async {
+    await _dio.delete<dynamic>(ApiEndpoints.searchHistoryItem(id));
+  }
+
+  Future<void> clearHistory() async {
+    await _dio.delete<dynamic>(ApiEndpoints.searchHistory);
   }
 }
 

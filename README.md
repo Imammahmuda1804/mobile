@@ -197,7 +197,9 @@ Alur:
 2. User memilih mode keyword/semantic.
 3. User bisa filter kota/kategori.
 4. Repository memanggil backend.
-5. Result ditampilkan sebagai destination card.
+5. Jika user login, riwayat pencarian dimuat dari backend.
+6. User bisa memilih history, menghapus satu history, atau membersihkan semua history.
+7. Result ditampilkan sebagai destination card.
 
 ## Flow Detail Destinasi
 

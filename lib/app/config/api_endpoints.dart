@@ -26,4 +26,5 @@ class ApiEndpoints {
       '/api/destinations/$id/reviews-by-topic-group';
   static String favoriteCheck(int id) => '/api/favorites/check/$id';
   static String favoriteByDestination(int id) => '/api/favorites/$id';
+  static String searchHistoryItem(int id) => '/api/search/history/$id';
 }
