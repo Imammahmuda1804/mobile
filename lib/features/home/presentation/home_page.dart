@@ -8,9 +8,9 @@ import '../../../app/theme/app_text_styles.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/app_section_header.dart';
-import '../../../core/widgets/destination_card.dart';
 import '../../../core/widgets/info_pill.dart';
 import '../../../core/widgets/loading_skeleton.dart';
+import '../../../core/utils/formatters.dart';
 import '../../search/data/search_models.dart';
 import '../data/home_repository.dart';
 
@@ -690,131 +690,291 @@ class _MiniBentoCard extends StatelessWidget {
   }
 }
 
-class _RecommendationSection extends StatelessWidget {
+class _RecommendationSection extends StatefulWidget {
   const _RecommendationSection({required this.items});
 
   final List<DestinationSummary> items;
 
   @override
+  State<_RecommendationSection> createState() => _RecommendationSectionState();
+}
+
+class _RecommendationSectionState extends State<_RecommendationSection> {
+  late final PageController _controller;
+  int _activeIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(viewportFraction: .88);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _goTo(int index) {
+    if (widget.items.isEmpty) return;
+    final targetIndex = index.clamp(0, widget.items.length - 1).toInt();
+    _controller.animateToPage(
+      targetIndex,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
+    if (widget.items.isEmpty) {
       return const _RecommendationError();
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FeaturedDestination(item: items.first),
-        const SizedBox(height: 16),
-        for (final item in items.skip(1).take(5)) ...[
-          DestinationCard(
-            destination: DestinationCardData(
-              name: item.name,
-              slug: item.slug,
-              city: item.city,
-              imageUrl: item.imageUrl,
-              positiveRatio: item.positiveRatio,
-              score: item.recommendationScore,
-              googleRating: item.googleRating,
-              topics: item.topics.map((topic) => topic.name).toList(),
-            ),
+        SizedBox(
+          height: 430,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.items.length,
+            onPageChanged: (value) => setState(() => _activeIndex = value),
+            itemBuilder: (context, index) {
+              final item = widget.items[index];
+              final isActive = index == _activeIndex;
+              return AnimatedScale(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                scale: isActive ? 1 : .94,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index == widget.items.length - 1 ? 0 : 12,
+                  ),
+                  child: _TimecardDestination(
+                    item: item,
+                    index: index,
+                    total: widget.items.length,
+                    active: isActive,
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 16),
-        ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  minHeight: 6,
+                  value: (_activeIndex + 1) / widget.items.length,
+                  backgroundColor: AppColors.surfaceWarm,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(AppColors.explore),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '${(_activeIndex + 1).toString().padLeft(2, '0')}/${widget.items.length.toString().padLeft(2, '0')}',
+              style: const TextStyle(
+                color: AppColors.text,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(width: 12),
+            IconButton.filledTonal(
+              tooltip: 'Destinasi sebelumnya',
+              onPressed: _activeIndex == 0 ? null : () => _goTo(_activeIndex - 1),
+              icon: const Icon(LucideIcons.chevronLeft),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filled(
+              tooltip: 'Destinasi berikutnya',
+              onPressed: _activeIndex >= widget.items.length - 1
+                  ? null
+                  : () => _goTo(_activeIndex + 1),
+              icon: const Icon(LucideIcons.chevronRight),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
 
-class _FeaturedDestination extends StatelessWidget {
-  const _FeaturedDestination({required this.item});
+class _TimecardDestination extends StatelessWidget {
+  const _TimecardDestination({
+    required this.item,
+    required this.index,
+    required this.total,
+    required this.active,
+  });
 
   final DestinationSummary item;
+  final int index;
+  final int total;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(30),
+    final description = item.description?.trim().isNotEmpty == true
+        ? item.description!.trim()
+        : 'Deskripsi destinasi belum tersedia.';
+
+    return GestureDetector(
       onTap: () => context.push('/destination/${item.slug}'),
-      child: Ink(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Color(active ? 0x33111927 : 0x1A111927),
+              blurRadius: active ? 28 : 16,
+              offset: const Offset(0, 16),
+            ),
+          ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 16 / 10,
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(30)),
-                child: Stack(
-                  fit: StackFit.expand,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              item.imageUrl.isEmpty
+                  ? Image.asset(
+                      'assets/images/media1.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const _HeroImageFallback(),
+                    )
+                  : Image.network(
+                      item.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const _HeroImageFallback(),
+                    ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x22111927),
+                      Color(0x77111927),
+                      Color(0xF2111927),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 18,
+                top: 18,
+                right: 18,
+                child: Row(
                   children: [
-                    item.imageUrl.isEmpty
-                        ? Image.asset(
-                            'assets/images/media1.png',
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                const _HeroImageFallback(),
-                          )
-                        : Image.network(item.imageUrl, fit: BoxFit.cover),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Color(0xAA0F172A)],
-                        ),
+                    InfoPill(
+                      label: '${(index + 1).toString().padLeft(2, '0')}/${total.toString().padLeft(2, '0')}',
+                      icon: LucideIcons.flame,
+                      background: Colors.white,
+                      color: AppColors.explore,
+                    ),
+                    const Spacer(),
+                    InfoPill(
+                      label: ratingLabel(item.googleRating),
+                      icon: LucideIcons.star,
+                      background: Colors.white,
+                      color: AppColors.warning,
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                left: 20,
+                right: 20,
+                bottom: 20,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.city.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFFFFD6C8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
                       ),
                     ),
-                    Positioned(
-                      left: 14,
-                      bottom: 14,
-                      child: InfoPill(
-                        label: 'Pilihan kuat',
-                        icon: LucideIcons.flame,
-                        background: Colors.white,
+                    const SizedBox(height: 8),
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 31,
+                        height: .96,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        InfoPill(
+                          label: 'Positif ${percentLabel(item.positiveRatio)}',
+                          icon: LucideIcons.trendingUp,
+                          background: AppColors.surfaceSuccess,
+                          color: AppColors.success,
+                        ),
+                        InfoPill(
+                          label: 'Skor ${scoreLabel(item.recommendationScore)}',
+                          icon: LucideIcons.sparkles,
+                          background: AppColors.surfaceCool,
+                          color: AppColors.ai,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                height: 1.35,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(
+                            LucideIcons.arrowRight,
+                            color: AppColors.explore,
+                            size: 20,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      height: 1.08,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      InfoPill(label: item.city, icon: LucideIcons.mapPin),
-                      InfoPill(
-                        label:
-                            'Skor ${item.recommendationScore == null ? 'N/A' : (item.recommendationScore! * 100).round()}',
-                        icon: LucideIcons.sparkles,
-                        color: AppColors.ai,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

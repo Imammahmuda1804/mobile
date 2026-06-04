@@ -273,6 +273,14 @@ class _DetailContent extends StatelessWidget {
                   onPressed: onTrailer,
                 ),
               ],
+              const SizedBox(height: 10),
+              AppButton(
+                label: 'Tambahkan ke rute',
+                icon: LucideIcons.route,
+                isSecondary: true,
+                onPressed: () =>
+                    context.push('/routes/new?destinationId=${destination.id}'),
+              ),
               const SizedBox(height: 26),
               const AppSectionHeader(
                 icon: LucideIcons.badgeCheck,

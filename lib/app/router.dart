@@ -11,6 +11,9 @@ import '../features/compare/presentation/compare_page.dart';
 import '../features/destination_detail/presentation/destination_detail_page.dart';
 import '../features/home/presentation/home_page.dart';
 import '../features/profile/presentation/profile_page.dart';
+import '../features/routes/presentation/route_builder_page.dart';
+import '../features/routes/presentation/route_detail_page.dart';
+import '../features/routes/presentation/routes_page.dart';
 import '../features/search/presentation/search_page.dart';
 
 // Router utama untuk tab shell, detail, auth, dan deep link query.
@@ -33,6 +36,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            path: '/destinations',
+            redirect: (_, __) => '/search',
+          ),
+          GoRoute(
             path: '/compare',
             pageBuilder: (context, state) => NoTransitionPage(
               child: ComparePage(
@@ -44,6 +51,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ),
               ),
             ),
+          ),
+          GoRoute(
+            path: '/routes',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: RoutesPage()),
           ),
           GoRoute(
             path: '/profile',
@@ -60,6 +72,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/destination/:slug',
         builder: (context, state) =>
             DestinationDetailPage(slug: state.pathParameters['slug'] ?? ''),
+      ),
+      GoRoute(
+        path: '/route/:shareSlug',
+        builder: (context, state) =>
+            RouteDetailPage(shareSlug: state.pathParameters['shareSlug'] ?? ''),
+      ),
+      GoRoute(
+        path: '/routes/new',
+        builder: (context, state) => RouteBuilderPage(
+          initialDestinationId: int.tryParse(
+            state.uri.queryParameters['destinationId'] ?? '',
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/routes/me',
+        builder: (context, state) => const MyRoutesPage(),
+      ),
+      GoRoute(
+        path: '/routes/saved',
+        builder: (context, state) => const SavedRoutesPage(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
@@ -78,7 +111,8 @@ class MainShell extends StatelessWidget {
 
   static const _tabs = [
     _ShellTab('/', 'Beranda', LucideIcons.house),
-    _ShellTab('/search', 'Cari', LucideIcons.search),
+    _ShellTab('/search', 'Destinasi', LucideIcons.mapPinned),
+    _ShellTab('/routes', 'Rute', LucideIcons.route),
     _ShellTab('/compare', 'Bandingkan', LucideIcons.gitCompareArrows),
     _ShellTab('/profile', 'Profil', LucideIcons.userRound),
   ];

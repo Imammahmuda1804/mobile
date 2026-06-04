@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
@@ -272,6 +273,8 @@ class _CompareResultView extends StatelessWidget {
     final first = result.destination1;
     final second = result.destination2;
     final winner = result.winnerId == first.id ? first : second;
+    final summary = result.summary ??
+        '${winner.name} lebih kuat untuk dipilih berdasarkan skor rekomendasi, sentimen, dan rating.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,10 +296,22 @@ class _CompareResultView extends StatelessWidget {
                 style: AppTextStyles.sectionTitle,
               ),
               const SizedBox(height: 8),
-              Text(
-                'Selisih skor ${(result.scoreDifference.abs() * 100).toStringAsFixed(0)} poin. Gunakan sentimen dan topik dominan untuk keputusan akhir.',
-                style: AppTextStyles.body,
-              ),
+              Text(summary, style: AppTextStyles.body),
+              if (result.bestFor.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final label in result.bestFor)
+                      InfoPill(
+                        label: label,
+                        icon: LucideIcons.sparkles,
+                        color: AppColors.ai,
+                      ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -312,6 +327,18 @@ class _CompareResultView extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 20),
+        const Text('Faktor utama', style: AppTextStyles.sectionTitle),
+        const SizedBox(height: 12),
+        _FactorCards(first: first, second: second),
+        const SizedBox(height: 20),
+        const Text('Yang unggul', style: AppTextStyles.sectionTitle),
+        const SizedBox(height: 12),
+        _SignalCards(first: first, second: second, risk: false),
+        const SizedBox(height: 20),
+        const Text('Yang perlu diwaspadai', style: AppTextStyles.sectionTitle),
+        const SizedBox(height: 12),
+        _SignalCards(first: first, second: second, risk: true),
         const SizedBox(height: 20),
         const Text('Distribusi sentimen', style: AppTextStyles.sectionTitle),
         const SizedBox(height: 12),
@@ -429,11 +456,236 @@ class _DestinationPanel extends StatelessWidget {
             color: AppColors.neutral,
           ),
           const SizedBox(height: 10),
-          if (dest.slug != null)
-            TextButton(
-              onPressed: () => context.push('/destination/${dest.slug}'),
-              child: const Text('Detail'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (dest.slug != null)
+                TextButton(
+                  onPressed: () => context.push('/destination/${dest.slug}'),
+                  child: const Text('Detail'),
+                ),
+              if (_mapsUri(dest) != null)
+                TextButton.icon(
+                  onPressed: () => _openMaps(dest),
+                  icon: const Icon(LucideIcons.navigation, size: 16),
+                  label: const Text('Maps'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FactorCards extends StatelessWidget {
+  const _FactorCards({required this.first, required this.second});
+
+  final ComparedDestination first;
+  final ComparedDestination second;
+
+  static const _labels = {
+    'access': 'Akses',
+    'cost_value': 'Biaya/value',
+    'cleanliness': 'Kebersihan',
+    'facilities': 'Fasilitas',
+    'crowd': 'Keramaian',
+    'view_activity': 'Pemandangan',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final entry in _labels.entries) ...[
+          _FactorRow(
+            label: entry.value,
+            firstName: first.name,
+            secondName: second.name,
+            firstValue: _factor(first, entry.key),
+            secondValue: _factor(second, entry.key),
+          ),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+
+  num _factor(ComparedDestination dest, String key) {
+    return dest.decisionFactors[key] ??
+        (((dest.recommendationScore ?? 0.5) + (dest.positiveRatio ?? 0.5)) *
+            50);
+  }
+}
+
+class _FactorRow extends StatelessWidget {
+  const _FactorRow({
+    required this.label,
+    required this.firstName,
+    required this.secondName,
+    required this.firstValue,
+    required this.secondValue,
+  });
+
+  final String label;
+  final String firstName;
+  final String secondName;
+  final num firstValue;
+  final num secondValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          _FactorBar(name: firstName, value: firstValue, color: AppColors.explore),
+          const SizedBox(height: 8),
+          _FactorBar(name: secondName, value: secondValue, color: AppColors.ai),
+        ],
+      ),
+    );
+  }
+}
+
+class _FactorBar extends StatelessWidget {
+  const _FactorBar({
+    required this.name,
+    required this.value,
+    required this.color,
+  });
+
+  final String name;
+  final num value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = (value.clamp(4, 100) as num).toDouble();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
+            Text(
+              value.round().toString(),
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: width / 100,
+            minHeight: 7,
+            backgroundColor: AppColors.background,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SignalCards extends StatelessWidget {
+  const _SignalCards({
+    required this.first,
+    required this.second,
+    required this.risk,
+  });
+
+  final ComparedDestination first;
+  final ComparedDestination second;
+  final bool risk;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _SignalCard(dest: first, risk: risk),
+        const SizedBox(height: 10),
+        _SignalCard(dest: second, risk: risk),
+      ],
+    );
+  }
+}
+
+class _SignalCard extends StatelessWidget {
+  const _SignalCard({required this.dest, required this.risk});
+
+  final ComparedDestination dest;
+  final bool risk;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = (risk ? dest.risks : dest.highlights).isNotEmpty
+        ? (risk ? dest.risks : dest.highlights)
+        : dest.topics.take(3).map((topic) => topic.name).toList();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: risk ? AppColors.surfaceDanger : AppColors.surfaceSuccess,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: risk
+              ? AppColors.negative.withValues(alpha: .2)
+              : AppColors.positive.withValues(alpha: .2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(dest.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          if (items.isEmpty)
+            Text(
+              risk ? 'Risiko khusus belum terlihat.' : 'Highlight belum cukup.',
+              style: AppTextStyles.body,
+            )
+          else
+            for (final item in items.take(4))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      risk ? LucideIcons.triangleAlert : LucideIcons.circleCheck,
+                      size: 16,
+                      color: risk ? AppColors.negative : AppColors.positive,
+                    ),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Text(
+                        item,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
         ],
       ),
     );
@@ -471,6 +723,23 @@ class _PanelMetric extends StatelessWidget {
       ),
     );
   }
+}
+
+Uri? _mapsUri(ComparedDestination dest) {
+  final url = dest.googleMapsUrl;
+  if (url != null && url.isNotEmpty) return Uri.tryParse(url);
+  if (dest.latitude != null && dest.longitude != null) {
+    return Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${dest.latitude},${dest.longitude}',
+    );
+  }
+  return null;
+}
+
+Future<void> _openMaps(ComparedDestination dest) async {
+  final uri = _mapsUri(dest);
+  if (uri == null) return;
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
 }
 
 class _TopicList extends StatelessWidget {

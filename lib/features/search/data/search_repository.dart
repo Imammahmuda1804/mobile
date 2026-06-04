@@ -41,12 +41,13 @@ class SearchRepository {
     String? query,
     String? city,
     String? category,
+    int limit = 100,
   }) async {
     try {
       final response = await _dio.get<dynamic>(
         ApiEndpoints.destinations,
         queryParameters: {
-          'limit': 20,
+          'limit': limit,
           if (query != null && query.isNotEmpty) 'search': query,
           if (city != null && city.isNotEmpty) 'city': city,
           if (category != null && category.isNotEmpty) 'category': category,
@@ -114,9 +115,8 @@ class SearchRepository {
           .map(
             (item) => DestinationCategoryOption(
               value: item['value']?.toString() ?? '',
-              label: item['label']?.toString() ??
-                  item['value']?.toString() ??
-                  '',
+              label:
+                  item['label']?.toString() ?? item['value']?.toString() ?? '',
             ),
           )
           .where((item) => item.value.isNotEmpty && item.label.isNotEmpty)

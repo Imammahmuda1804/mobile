@@ -12,6 +12,9 @@ class DestinationDetail {
     required this.description,
     required this.imageUrl,
     required this.googleMapsUrl,
+    this.latitude,
+    this.longitude,
+    this.googlePlaceId,
     this.youtubeUrl,
     this.googleRating,
     this.googleReviewCount,
@@ -46,6 +49,9 @@ class DestinationDetail {
         (json['thumbnailUrl'] ?? json['thumbnail_url'])?.toString(),
       ),
       googleMapsUrl: json['googleMapsUrl']?.toString() ?? '',
+      latitude: _num(json['latitude']),
+      longitude: _num(json['longitude']),
+      googlePlaceId: json['googlePlaceId']?.toString(),
       youtubeUrl: json['youtubeUrl']?.toString(),
       googleRating: _num(json['googleRating']),
       googleReviewCount: _num(json['googleReviewCount']),
@@ -103,6 +109,9 @@ class DestinationDetail {
   final String description;
   final String imageUrl;
   final String googleMapsUrl;
+  final num? latitude;
+  final num? longitude;
+  final String? googlePlaceId;
   final String? youtubeUrl;
   final num? googleRating;
   final num? googleReviewCount;

@@ -5,6 +5,13 @@ class ComparedDestination {
     required this.name,
     required this.city,
     this.slug,
+    this.province,
+    this.category,
+    this.thumbnailUrl,
+    this.latitude,
+    this.longitude,
+    this.googleMapsUrl,
+    this.reviewCount = 0,
     this.recommendationScore,
     this.positiveRatio,
     this.userRating,
@@ -13,6 +20,10 @@ class ComparedDestination {
     this.neutral = 0,
     this.negative = 0,
     this.topics = const [],
+    this.highlights = const [],
+    this.risks = const [],
+    this.travelTraits = const {},
+    this.decisionFactors = const {},
   });
 
   factory ComparedDestination.fromJson(Map<String, dynamic> json) {
@@ -24,6 +35,13 @@ class ComparedDestination {
       name: json['name']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       slug: json['slug']?.toString(),
+      province: json['province']?.toString(),
+      category: json['category']?.toString(),
+      thumbnailUrl: json['thumbnailUrl']?.toString(),
+      latitude: _num(json['latitude']),
+      longitude: _num(json['longitude']),
+      googleMapsUrl: json['googleMapsUrl']?.toString(),
+      reviewCount: int.tryParse('${json['review_count'] ?? ''}') ?? 0,
       recommendationScore: _num(json['recommendation_score']),
       positiveRatio: _num(json['positive_ratio']),
       userRating: rating is Map<String, dynamic> ? _num(rating['user']) : null,
@@ -44,6 +62,10 @@ class ComparedDestination {
               .map((item) => CompareTopic.fromJson(item))
               .toList()
           : const [],
+      highlights: _readStringList(json['highlights']),
+      risks: _readStringList(json['risks']),
+      travelTraits: _readScoreMap(json['travel_traits']),
+      decisionFactors: _readScoreMap(json['decision_factors']),
     );
   }
 
@@ -51,6 +73,13 @@ class ComparedDestination {
   final String name;
   final String city;
   final String? slug;
+  final String? province;
+  final String? category;
+  final String? thumbnailUrl;
+  final num? latitude;
+  final num? longitude;
+  final String? googleMapsUrl;
+  final int reviewCount;
   final num? recommendationScore;
   final num? positiveRatio;
   final num? userRating;
@@ -59,6 +88,10 @@ class ComparedDestination {
   final int neutral;
   final int negative;
   final List<CompareTopic> topics;
+  final List<String> highlights;
+  final List<String> risks;
+  final Map<String, num> travelTraits;
+  final Map<String, num> decisionFactors;
 }
 
 class CompareTopic {
@@ -86,10 +119,14 @@ class CompareResult {
     required this.destination2,
     this.winnerId,
     this.scoreDifference = 0,
+    this.summary,
+    this.bestFor = const [],
+    this.tradeoffs = const [],
   });
 
   factory CompareResult.fromJson(Map<String, dynamic> json) {
-    final comparison = json['comparison'];
+    final comparison = _readMap(json['comparison']);
+    final insights = _readMap(comparison?['insights']);
     return CompareResult(
       destination1: ComparedDestination.fromJson(
         json['destination1'] as Map<String, dynamic>,
@@ -97,12 +134,13 @@ class CompareResult {
       destination2: ComparedDestination.fromJson(
         json['destination2'] as Map<String, dynamic>,
       ),
-      winnerId: comparison is Map<String, dynamic>
-          ? int.tryParse(comparison['recommendation_winner'].toString())
-          : null,
-      scoreDifference: comparison is Map<String, dynamic>
-          ? _num(comparison['score_difference']) ?? 0
-          : 0,
+      winnerId: int.tryParse(
+        comparison?['recommendation_winner'].toString() ?? '',
+      ),
+      scoreDifference: _num(comparison?['score_difference']) ?? 0,
+      summary: insights?['summary']?.toString(),
+      bestFor: _readStringList(insights?['best_for']),
+      tradeoffs: _readStringList(insights?['tradeoffs']),
     );
   }
 
@@ -110,10 +148,39 @@ class CompareResult {
   final ComparedDestination destination2;
   final int? winnerId;
   final num scoreDifference;
+  final String? summary;
+  final List<String> bestFor;
+  final List<String> tradeoffs;
 }
 
 num? _num(dynamic value) {
   if (value == null) return null;
   if (value is num) return value;
   return num.tryParse(value.toString());
+}
+
+List<String> _readStringList(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .map((item) => item.toString())
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+Map<String, num> _readScoreMap(dynamic value) {
+  if (value is! Map) return const {};
+  final result = <String, num>{};
+  for (final entry in value.entries) {
+    result[entry.key.toString()] = _num(entry.value) ?? 0;
+  }
+  return result;
+}
+
+Map<String, dynamic>? _readMap(dynamic value) {
+  if (value is! Map) return null;
+  final result = <String, dynamic>{};
+  for (final entry in value.entries) {
+    result[entry.key.toString()] = entry.value;
+  }
+  return result;
 }

@@ -17,6 +17,10 @@ class ApiEndpoints {
   static const usersMe = '/api/users/me';
   static const usersMeAvatar = '/api/users/me/avatar';
   static const userReviews = '/api/user-reviews';
+  static const routesPublic = '/api/routes/public';
+  static const routesMine = '/api/routes/me';
+  static const routesSaved = '/api/routes/saved';
+  static const routes = '/api/routes';
 
   static String destinationBySlug(String slug) =>
       '/api/destinations/slug/$slug';
@@ -27,4 +31,9 @@ class ApiEndpoints {
   static String favoriteCheck(int id) => '/api/favorites/check/$id';
   static String favoriteByDestination(int id) => '/api/favorites/$id';
   static String searchHistoryItem(int id) => '/api/search/history/$id';
+  static String routeShare(String slug) => '/api/routes/share/$slug';
+  static String routeSave(int id) => '/api/routes/$id/save';
+  static String routeSavedProgress(int id) => '/api/routes/saved/$id/progress';
+  static String routeSavedProgressStop(int routeId, int routeStopId) =>
+      '/api/routes/saved/$routeId/progress/$routeStopId';
 }

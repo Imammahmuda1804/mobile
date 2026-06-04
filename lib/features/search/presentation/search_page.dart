@@ -58,9 +58,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   void initState() {
     super.initState();
     _queryController.text = widget.initialQuery ?? '';
-    if (_queryController.text.trim().isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _search());
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _search());
   }
 
   @override
@@ -72,9 +70,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   // Menjalankan pencarian sesuai mode dan filter aktif.
   Future<void> _search() async {
     final query = _queryController.text.trim();
-    if (query.isEmpty && _selectedCity.isEmpty && _selectedCategory.isEmpty) {
-      return;
-    }
 
     setState(() {
       _loading = true;
@@ -115,6 +110,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       _hasSearched = false;
       _error = null;
     });
+    _search();
   }
 
   Future<void> _deleteHistoryItem(SearchHistoryItem item) async {
@@ -266,7 +262,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             )
           else if (!_hasSearched)
             const EmptyState(
-              title: 'Mulai dari rasa perjalanan',
+              title: 'Memuat katalog destinasi',
               message:
                   'Cari “pantai tenang”, pilih kota, atau aktifkan semantic untuk hasil yang lebih kontekstual.',
               icon: LucideIcons.compass,
@@ -274,7 +270,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           else ...[
             if (_results.isNotEmpty)
               InfoPill(
-                label: '${_results.length} destinasi ditemukan',
+                label: _queryController.text.trim().isEmpty &&
+                        _selectedCity.isEmpty &&
+                        _selectedCategory.isEmpty
+                    ? '${_results.length} destinasi tersedia'
+                    : '${_results.length} destinasi ditemukan',
                 icon: LucideIcons.listChecks,
                 color: _semanticMode ? AppColors.ai : AppColors.explore,
               ),
@@ -367,10 +367,11 @@ class _SearchCommandSurface extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Cari destinasi', style: AppTextStyles.sectionTitle),
+                    Text('Katalog destinasi',
+                        style: AppTextStyles.sectionTitle),
                     SizedBox(height: 2),
                     Text(
-                      'Temukan tempat dari nama, kota, kategori, atau vibe.',
+                      'Lihat semua destinasi atau persempit dengan nama, kota, kategori, dan vibe.',
                       style: AppTextStyles.body,
                     ),
                   ],

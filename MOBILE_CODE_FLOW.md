@@ -6,7 +6,7 @@ Dokumen ini menjelaskan struktur folder `Mobile`, alur kerja kode, dan fungsi ko
 
 Folder `Mobile` adalah aplikasi Flutter untuk pengguna RANAHINSIGHT. Tugasnya:
 
-1. menampilkan home, search, detail destinasi, compare, profile, favorite, login, dan register;
+1. menampilkan home, katalog destinasi/search, route wisata, detail destinasi, compare, profile, favorite, login, dan register;
 2. memanggil backend NestJS melalui Dio;
 3. menyimpan token login di secure storage;
 4. menampilkan data destinasi, sentimen, topic group, review, favorite, dan compare;
@@ -58,7 +58,7 @@ Alur:
 Posisi pada flow: navigasi utama aplikasi.
 
 Kegunaan:
-- mendefinisikan route `home`, `search`, `compare`, `profile`, `destination/:slug`, `login`, dan `register`;
+- mendefinisikan route `home`, `search/destinations`, `routes`, `routes/saved`, `compare`, `profile`, `destination/:slug`, `login`, dan `register`;
 - membuat shell tab utama;
 - menjaga bottom navigation dan brand bar mobile.
 
@@ -215,11 +215,12 @@ File penting:
 Komentar penting:
 - `HomeRepository`: repository API untuk rekomendasi dan trending di home.
 - `homeTrendingProvider`: memuat destinasi rekomendasi untuk home.
-- `HomePage`: halaman home mobile dengan hero, prompt, insight, dan rekomendasi.
+- `HomePage`: halaman home mobile dengan hero, prompt, insight, dan rekomendasi timecard.
 
 Alur:
 1. `homeTrendingProvider` memanggil `HomeRepository.fetchTrending`.
 2. Home menampilkan hero, prompt search, insight, dan rekomendasi.
+3. `_RecommendationSection` menampilkan rekomendasi sebagai `PageView` timecard dengan gambar aktif, deskripsi, indicator, tombol navigasi, dan CTA detail.
 3. Klik CTA search mengarah ke `/search?q=...`.
 4. Klik destinasi mengarah ke `/destination/:slug`.
 
@@ -286,6 +287,49 @@ Alur:
 5. Klik topic membuka bottom sheet review yang terkait.
 6. Submit review mengirim rating dan teks ke backend.
 
+## Feature Routes
+
+Folder:
+- `Mobile/lib/features/routes`
+
+File penting:
+- `data/route_models.dart`
+- `data/routes_repository.dart`
+- `presentation/routes_page.dart`
+- `presentation/route_detail_page.dart`
+- `presentation/route_builder_page.dart`
+
+Komentar penting:
+- `TravelRoute`: model route wisata shareable beserta daftar stop.
+- `RouteStop`: model urutan kunjungan dan destinasi pada route.
+- `SavedRouteProgress`: model progress route tersimpan milik user login.
+- `RoutesRepository`: repository API untuk route publik, route user, route tersimpan, save/unsave, create route, dan progress stop.
+- `RoutesPage`: tab route publik.
+- `SavedRoutesPage`: halaman route tersimpan dengan tracker kunjungan.
+- `RouteDetailPage`: detail route shareable dan aksi simpan/hapus simpanan.
+- `RouteBuilderPage`: form membuat route dari daftar destinasi backend atau destinasi awal.
+
+Alur route publik:
+1. Router membuka `/routes`.
+2. `publicRoutesProvider` memanggil `RoutesRepository.fetchPublicRoutes`.
+3. Jika user login, `savedRoutesProvider` memuat route tersimpan untuk menampilkan badge `Tersimpan`.
+4. Tap route membuka `/route/:shareSlug`.
+
+Alur route tersimpan:
+1. User membuka `/routes/saved`.
+2. `savedRoutesProvider` memanggil `/api/routes/saved`.
+3. Tiap card tracker memanggil `savedRouteProgressProvider(route.id)`.
+4. Tombol `Dikunjungi` memanggil `PUT /api/routes/saved/:routeId/progress/:routeStopId`.
+5. Tombol `Batal` memanggil `DELETE /api/routes/saved/:routeId/progress/:routeStopId`.
+6. Progress bar dan next stop diperbarui setelah provider di-invalidate.
+
+Alur detail route:
+1. Router membuka `/route/:shareSlug`.
+2. `routeDetailProvider` memanggil `RoutesRepository.fetchByShareSlug`.
+3. User login bisa menyimpan route atau menghapusnya dari simpanan.
+4. Untuk route `public` dan `link_only`, tombol `Salin link rute` menyalin `${WEB_BASE_URL}/routes/:shareSlug` lewat `Clipboard`.
+5. Aksi salin/duplikasi route tidak dipakai di mobile karena fitur simpan sudah cukup untuk kebutuhan user.
+
 ## Feature Compare
 
 Folder:
@@ -344,6 +388,7 @@ Contoh flow:
 - Search mobile: `SearchPage` -> `SearchRepository` -> backend `/api/search` atau `/api/destinations`.
 - Detail mobile: `DestinationDetailPage` -> `DestinationRepository` -> backend `/api/destinations/slug/:slug`.
 - Favorite mobile: `ProfilePage` atau detail -> repository -> backend `/api/favorites`.
+- Route mobile: `RoutesPage`/`SavedRoutesPage` -> `RoutesRepository` -> backend `/api/routes/*`.
 - Compare mobile: `ComparePage` -> `CompareRepository` -> backend `/api/analytics/compare`.
 
 ## Pola Riverpod yang Dipakai
@@ -446,7 +491,7 @@ Bagian ini memetakan file Flutter yang memengaruhi startup, routing, network, st
 | Path | Posisi pada flow | Kegunaan | Referensi baris utama |
 | --- | --- | --- | --- |
 | `Mobile/lib/features/home/data/home_repository.dart` | Repository home | Mengambil trending/rekomendasi destinasi dari backend. | `homeRepositoryProvider` `home_repository.dart:6`, `HomeRepository` `home_repository.dart:11` |
-| `Mobile/lib/features/home/presentation/home_page.dart` | Tampilan home | Hero, search CTA, signal cards, insight panel, action bento, dan rekomendasi. | `homeTrendingProvider` `home_page.dart:18`, `HomePage` `home_page.dart:44`, `_HeroLanding` `home_page.dart:121`, `_RecommendationSection` `home_page.dart:693` |
+| `Mobile/lib/features/home/presentation/home_page.dart` | Tampilan home | Hero, search CTA, signal cards, insight panel, action bento, dan rekomendasi timecard. | `homeTrendingProvider` `home_page.dart:18`, `HomePage` `home_page.dart:44`, `_HeroLanding` `home_page.dart:121`, `_RecommendationSection` `home_page.dart:693` |
 | `Mobile/lib/features/search/data/search_models.dart` | Model search | Parser destination summary dan topic filter dari response search. | `DestinationTopic` `search_models.dart:3`, `DestinationSummary` `search_models.dart:20`, `TopicFilter` `search_models.dart:85` |
 | `Mobile/lib/features/search/data/search_repository.dart` | Repository search | Memanggil keyword/semantic search, daftar kota, dan history search. | `searchRepositoryProvider` `search_repository.dart:9`, `SearchRepository` `search_repository.dart:14` |
 | `Mobile/lib/features/search/presentation/search_page.dart` | Tampilan search | Mengatur query, mode search, filter kota/kategori, history, loading, error, dan result card. | `citiesProvider` `search_page.dart:20`, `SearchPage` `search_page.dart:32`, `_SearchCommandSurface` `search_page.dart:249`, `_FilterButton` `search_page.dart:451` |
@@ -458,6 +503,16 @@ Bagian ini memetakan file Flutter yang memengaruhi startup, routing, network, st
 | `Mobile/lib/features/destination_detail/data/destination_models.dart` | Model detail | Parser detail destinasi, topic group, breakdown sentimen, review scrape, dan user review. | `DestinationDetail` `destination_models.dart:5`, `TopicGroupInsight` `destination_models.dart:124`, `ScrapedTopicReview` `destination_models.dart:187`, `UserReview` `destination_models.dart:219` |
 | `Mobile/lib/features/destination_detail/data/destination_repository.dart` | Repository detail | Memanggil detail destinasi, favorite check/add/remove, review, dan review by topic/group. | `destinationRepositoryProvider` `destination_repository.dart:9`, `DestinationRepository` `destination_repository.dart:14` |
 | `Mobile/lib/features/destination_detail/presentation/destination_detail_page.dart` | Tampilan detail | Hero, metric, deskripsi, peta topik, galeri, ulasan, review form, dan bottom sheet ulasan topik. | `destinationDetailProvider` `destination_detail_page.dart:25`, `DestinationDetailPage` `destination_detail_page.dart:31`, `_DetailContent` `destination_detail_page.dart:125`, `_TopicInsightSection` `destination_detail_page.dart:522`, `_GallerySection` `destination_detail_page.dart:1029`, `_ReviewForm` `destination_detail_page.dart:1434` |
+
+### Routes
+
+| Path | Posisi pada flow | Kegunaan | Referensi baris utama |
+| --- | --- | --- | --- |
+| `Mobile/lib/features/routes/data/route_models.dart` | Model route | Parser route, stop destinasi, destinasi stop, dan progress route tersimpan. | `TravelRoute`, `RouteStop`, `SavedRouteProgress`, `SavedRouteProgressItem` |
+| `Mobile/lib/features/routes/data/routes_repository.dart` | Repository route | Memanggil route publik, route user, route tersimpan, create, save/unsave, dan progress stop. | `routesRepositoryProvider`, `RoutesRepository` |
+| `Mobile/lib/features/routes/presentation/routes_page.dart` | Tampilan route | Tab route publik, route saya, route tersimpan, badge tersimpan, dan tracker kunjungan. | `publicRoutesProvider`, `savedRoutesProvider`, `RoutesPage`, `SavedRoutesPage`, `_SavedRouteTrackerCard` |
+| `Mobile/lib/features/routes/presentation/route_detail_page.dart` | Detail route | Detail route shareable, aksi simpan/hapus simpanan, daftar stop, dan Maps. | `routeDetailProvider`, `RouteDetailPage`, `_StopTile` |
+| `Mobile/lib/features/routes/presentation/route_builder_page.dart` | Builder route | Membuat route baru dari destinasi favorit atau destinasi awal. | `RouteBuilderPage` |
 
 ### Compare
 
@@ -482,5 +537,6 @@ Bagian ini memetakan file Flutter yang memengaruhi startup, routing, network, st
 3. **Auth restore**: `AuthController` `auth_controller.dart:45` membaca token, memanggil `/users/me`, lalu state dipakai route dan UI.
 4. **Home/search**: `home_page.dart:44` menampilkan landing mobile, `search_page.dart:32` mengatur pencarian, dan `search_repository.dart:14` memanggil backend.
 5. **Detail**: `destination_detail_page.dart:25` fetch detail, `destination_repository.dart:14` memanggil endpoint, dan `destination_models.dart:5` memetakan response ke class Dart.
-6. **Compare**: `compare_page.dart:26` memilih destinasi, `compare_repository.dart:19` meminta hasil compare, lalu `compare_models.dart:83` memetakan hasil.
-7. **Profile/favorite**: `profile_page.dart:32` mengatur UI profile/favorite, `profile_repository.dart:16` menjadi jalur data, dan `profile_models.dart:4` memetakan favorite card.
+6. **Routes**: `routes_page.dart` menampilkan route publik, route user, route tersimpan, dan progress stop melalui `routes_repository.dart`.
+7. **Compare**: `compare_page.dart:26` memilih destinasi, `compare_repository.dart:19` meminta hasil compare, lalu `compare_models.dart:83` memetakan hasil.
+8. **Profile/favorite**: `profile_page.dart:32` mengatur UI profile/favorite, `profile_repository.dart:16` menjadi jalur data, dan `profile_models.dart:4` memetakan favorite card.

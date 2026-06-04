@@ -1,6 +1,6 @@
 # RANAHINSIGHT Mobile App
 
-Folder `Mobile` berisi aplikasi Flutter untuk user RANAHINSIGHT. Aplikasi ini dipakai untuk eksplorasi destinasi, pencarian keyword/semantic, detail destinasi, favorite, compare, profile, avatar, dan ulasan user.
+Folder `Mobile` berisi aplikasi Flutter untuk user RANAHINSIGHT. Aplikasi ini dipakai untuk eksplorasi destinasi, pencarian keyword/semantic, detail destinasi, route wisata, favorite, compare, profile, avatar, dan ulasan user.
 
 ## Kegunaan Aplikasi
 
@@ -8,9 +8,12 @@ Mobile app dipakai untuk:
 
 - membuka landing/home mobile;
 - melihat rekomendasi destinasi;
+- melihat katalog semua destinasi;
 - mencari destinasi dengan keyword atau semantic search;
 - filter kota dan kategori;
 - melihat detail destinasi, gallery, peta topik, rating, dan review;
+- melihat route wisata publik dan membuat route dari destinasi favorit;
+- menyimpan route publik dan menandai progres kunjungan per stop;
 - memberi ulasan user aplikasi;
 - menambah/menghapus favorite;
 - compare dua destinasi;
@@ -58,6 +61,7 @@ Buat atau cek file `.env`:
 
 ```env
 API_BASE_URL=http://192.168.1.10:3000
+WEB_BASE_URL=http://192.168.1.10:3001
 ```
 
 Untuk emulator Android, backend lokal biasanya bisa memakai:
@@ -84,6 +88,25 @@ Pastikan:
 - firewall Windows mengizinkan port 3000 private network;
 - backend berjalan di laptop;
 - URL bisa dibuka dari browser HP.
+
+## Fitur Route Wisata
+
+Mobile memakai endpoint backend `/api/routes/*` untuk route wisata:
+
+- tab `Rute` menampilkan route publik;
+- `/routes/new` membuat route dari daftar destinasi, memilih visibilitas lewat select sheet, dan auto sort di backend;
+- `/route/:shareSlug` membuka detail route shareable;
+- `/routes/saved` menampilkan route yang disimpan user;
+- user bisa menyimpan atau menghapus simpanan route publik;
+- route tersimpan memiliki tracker kunjungan: stop bisa ditandai `dikunjungi`, dibatalkan, dan dibuka ke Google Maps;
+- visibilitas `link_only` tidak menampilkan route di katalog publik, tetapi detail route menyediakan tombol `Salin link rute` yang menyalin `${WEB_BASE_URL}/routes/:shareSlug`;
+- detail destinasi memiliki CTA "Tambahkan ke rute" dan tombol Google Maps.
+
+## Home dan Rekomendasi
+
+Home mobile memakai `homeTrendingProvider` untuk mengambil data dari `/api/destinations/recommendations`. Section rekomendasi ditampilkan sebagai carousel `PageView` bergaya timecard: satu destinasi aktif tampil besar dengan gambar, kota, deskripsi, rating, skor, sentimen positif, dan CTA ke detail, lalu user bisa swipe atau memakai tombol navigasi.
+
+Tampilan ini memakai warna brand yang sama dengan web: orange untuk eksplorasi, blue untuk AI/score, emerald untuk sentimen positif, dan overlay gelap agar teks tetap kontras di atas gambar.
 
 ## Menjalankan Aplikasi
 
@@ -229,8 +252,8 @@ Alur:
 
 1. User memilih dua destinasi.
 2. Repository meminta hasil compare ke backend.
-3. Model compare memetakan metric, sentiment, topik, dan ringkasan.
-4. UI menampilkan panel perbandingan.
+3. Model compare memetakan metric, sentiment, topik, highlight, risiko, faktor keputusan, maps, dan ringkasan.
+4. UI menampilkan rekomendasi cepat, cocok untuk, kartu destinasi, faktor utama, highlight/risiko, chart sentimen, dan topik dominan.
 
 ## Flow Profile dan Favorite
 
