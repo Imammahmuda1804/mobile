@@ -4,6 +4,7 @@ import '../../../core/errors/app_exception.dart';
 import '../../../core/network/dio_client.dart';
 import 'auth_models.dart';
 import 'auth_repository.dart';
+import 'google_sign_in_service.dart';
 
 // State autentikasi yang dibaca UI dan bootstrap app.
 class AuthState {
@@ -77,6 +78,32 @@ class AuthController extends StateNotifier<AuthState> {
       return true;
     } on AppException catch (error) {
       state = state.copyWith(isLoading: false, errorMessage: error.message);
+      return false;
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final idToken =
+          await _ref.read(googleSignInServiceProvider).signInAndGetIdToken();
+      final session = await _ref
+          .read(authRepositoryProvider)
+          .loginWithGoogle(idToken: idToken);
+      await _ref.read(secureStorageProvider).saveTokens(
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+          );
+      state = AuthState(user: session.user, isAuthenticated: true);
+      return true;
+    } on AppException catch (error) {
+      state = state.copyWith(isLoading: false, errorMessage: error.message);
+      return false;
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Login Google gagal. Coba lagi.',
+      );
       return false;
     }
   }

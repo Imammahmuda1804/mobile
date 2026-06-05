@@ -179,22 +179,32 @@ File penting:
 - `data/auth_models.dart`
 - `data/auth_repository.dart`
 - `data/auth_controller.dart`
+- `data/google_sign_in_service.dart`
 - `presentation/login_page.dart`
 - `presentation/register_page.dart`
 
 Komentar penting:
 - `AuthState`: state autentikasi yang dibaca UI dan bootstrap app.
-- `AuthController`: controller Riverpod untuk login, register, restore session, dan logout.
+- `AuthController`: controller Riverpod untuk login password, login Google, register, restore session, dan logout.
 - `restoreSession`: mengambil token tersimpan lalu memuat user aktif dari backend.
-- `AuthRepository`: repository API untuk login, register, dan user aktif.
+- `AuthRepository`: repository API untuk login password, login Google, register, dan user aktif.
+- `GoogleSignInService`: wrapper Google SDK untuk initialize `serverClientId`, membuka account picker, dan mengambil `idToken`.
 
-Alur login:
+Alur login password:
 1. User mengisi form login.
 2. `LoginPage` memanggil `AuthController.login`.
 3. `AuthController` memanggil `AuthRepository.login`.
 4. Token disimpan ke secure storage.
 5. State berubah menjadi authenticated.
 6. Router bisa membawa user ke halaman utama/profile.
+
+Alur login Google:
+1. User menekan tombol "Masuk / daftar dengan Google".
+2. `AuthController.loginWithGoogle` meminta `idToken` ke `GoogleSignInService`.
+3. `AuthRepository.loginWithGoogle` mengirim `POST /api/auth/google`.
+4. Backend memverifikasi token Google, auto-create atau auto-link user, lalu mengembalikan token aplikasi.
+5. Token disimpan ke secure storage.
+6. State berubah menjadi authenticated.
 
 Alur restore session:
 1. App start memanggil `appBootstrapProvider`.
@@ -481,9 +491,10 @@ Bagian ini memetakan file Flutter yang memengaruhi startup, routing, network, st
 | Path | Posisi pada flow | Kegunaan | Referensi baris utama |
 | --- | --- | --- | --- |
 | `Mobile/lib/features/auth/data/auth_models.dart` | Model auth | Parser user dan session dari response backend. | `AuthUser` `auth_models.dart:1`, `AuthSession` `auth_models.dart:27` |
-| `Mobile/lib/features/auth/data/auth_repository.dart` | Repository auth | Memanggil endpoint login/register/me/logout/refresh backend. | `authRepositoryProvider` `auth_repository.dart:9`, `AuthRepository` `auth_repository.dart:14` |
-| `Mobile/lib/features/auth/data/auth_controller.dart` | State auth | Mengatur status login, restore token, login, register, logout, dan user aktif. | `AuthState` `auth_controller.dart:9`, `authControllerProvider` `auth_controller.dart:38`, `AuthController` `auth_controller.dart:45` |
-| `Mobile/lib/features/auth/presentation/login_page.dart` | Tampilan login | Form login, validasi, loading, error, dan navigasi ke register. | `LoginPage` `login_page.dart:11` |
+| `Mobile/lib/features/auth/data/auth_repository.dart` | Repository auth | Memanggil endpoint login/register/Google/me/logout/refresh backend. | `authRepositoryProvider` `auth_repository.dart:9`, `AuthRepository` `auth_repository.dart:14` |
+| `Mobile/lib/features/auth/data/google_sign_in_service.dart` | Google auth SDK | Mengambil Google ID token memakai `google_sign_in` sebelum dikirim ke backend. | `googleSignInServiceProvider` `google_sign_in_service.dart:7`, `GoogleSignInService` `google_sign_in_service.dart:11` |
+| `Mobile/lib/features/auth/data/auth_controller.dart` | State auth | Mengatur status login password/Google, restore token, register, logout, dan user aktif. | `AuthState` `auth_controller.dart:9`, `authControllerProvider` `auth_controller.dart:39`, `AuthController` `auth_controller.dart:46` |
+| `Mobile/lib/features/auth/presentation/login_page.dart` | Tampilan login | Form login, tombol Google, validasi, loading, error, dan navigasi ke register. | `LoginPage` `login_page.dart:11` |
 | `Mobile/lib/features/auth/presentation/register_page.dart` | Tampilan register | Form daftar user dan integrasi ke auth controller. | `RegisterPage` `register_page.dart:11` |
 
 ### Home dan Search

@@ -14,4 +14,8 @@ class Env {
     if (value == null || value.isEmpty) return 'http://localhost:3001';
     return value.replaceFirst(RegExp(r'/$'), '');
   }
+
+  static String get googleWebClientId {
+    return dotenv.env['GOOGLE_WEB_CLIENT_ID']?.trim() ?? '';
+  }
 }

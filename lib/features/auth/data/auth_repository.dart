@@ -31,6 +31,18 @@ class AuthRepository {
     }
   }
 
+  Future<AuthSession> loginWithGoogle({required String idToken}) async {
+    try {
+      final response = await _dio.post<dynamic>(
+        ApiEndpoints.googleLogin,
+        data: {'id_token': idToken},
+      );
+      return AuthSession.fromJson(unwrapData(response) as Map<String, dynamic>);
+    } catch (error) {
+      throw mapDioError(error);
+    }
+  }
+
   Future<void> register({
     required String name,
     required String email,

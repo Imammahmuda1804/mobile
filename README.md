@@ -39,6 +39,7 @@ Package utama:
 - `flutter_secure_storage` untuk token.
 - `cached_network_image` untuk gambar.
 - `fl_chart` untuk chart.
+- `google_sign_in` untuk mengambil Google ID token sebelum dikirim ke backend.
 - `lucide_icons_flutter` untuk icon.
 - `image_picker` untuk avatar.
 - `flutter_dotenv` untuk env.
@@ -62,6 +63,7 @@ Buat atau cek file `.env`:
 ```env
 API_BASE_URL=http://192.168.1.10:3000
 WEB_BASE_URL=http://192.168.1.10:3001
+GOOGLE_WEB_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 ```
 
 Untuk emulator Android, backend lokal biasanya bisa memakai:
@@ -205,6 +207,20 @@ Alur:
 3. Token disimpan di secure storage.
 4. Auth controller menyimpan state user.
 5. Router dan UI memakai state ini untuk auth gate.
+
+Google login memakai flow yang sama setelah backend mengembalikan token aplikasi:
+
+1. User menekan tombol "Masuk / daftar dengan Google".
+2. `google_sign_in` mengambil Google `idToken` memakai `GOOGLE_WEB_CLIENT_ID` sebagai `serverClientId`.
+3. Mobile mengirim `POST /api/auth/google`.
+4. Backend membuat atau menautkan akun, lalu mengembalikan `access_token`, `refresh_token`, dan `user`.
+5. Token disimpan di secure storage seperti login email/password.
+
+Setup Android OAuth:
+
+- package name: `com.ranahinsight.ranahinsight_mobile`;
+- buat Android OAuth client di Google Cloud dengan SHA-1 debug/release;
+- buat Web OAuth client dan pakai client ID web untuk `GOOGLE_WEB_CLIENT_ID` di mobile, web, dan backend.
 
 ## Flow Search
 

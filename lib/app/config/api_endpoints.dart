@@ -2,6 +2,7 @@ class ApiEndpoints {
   const ApiEndpoints._();
 
   static const login = '/api/auth/login';
+  static const googleLogin = '/api/auth/google';
   static const register = '/api/auth/register';
   static const refresh = '/api/auth/refresh';
   static const destinations = '/api/destinations';

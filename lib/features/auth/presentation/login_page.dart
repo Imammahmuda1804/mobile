@@ -33,6 +33,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (success && mounted) context.go('/profile');
   }
 
+  Future<void> _loginWithGoogle() async {
+    final success =
+        await ref.read(authControllerProvider.notifier).loginWithGoogle();
+    if (success && mounted) context.go('/profile');
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
@@ -71,6 +77,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             icon: LucideIcons.logIn,
             isLoading: auth.isLoading,
             onPressed: _login,
+          ),
+          const SizedBox(height: 12),
+          AppButton(
+            label: 'Masuk / daftar dengan Google',
+            icon: LucideIcons.badgeCheck,
+            isSecondary: true,
+            isLoading: auth.isLoading,
+            onPressed: _loginWithGoogle,
           ),
           TextButton(
             onPressed: () => context.push('/register'),
