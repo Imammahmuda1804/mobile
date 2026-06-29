@@ -32,7 +32,7 @@ class AppButton extends StatelessWidget {
           foregroundColor: foreground,
           disabledBackgroundColor: AppColors.border,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(10),
             side: BorderSide(
               color: isSecondary ? AppColors.border : Colors.transparent,
             ),
@@ -45,7 +45,7 @@ class AppButton extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : Icon(icon, size: 18),
-        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
       ),
     );
   }

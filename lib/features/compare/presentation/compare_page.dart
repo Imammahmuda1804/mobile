@@ -283,7 +283,7 @@ class _CompareResultView extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.surfaceCool,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.ai.withValues(alpha: .18)),
           ),
           child: Column(
@@ -316,16 +316,32 @@ class _CompareResultView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _DestinationPanel(dest: first, tone: AppColors.explore),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _DestinationPanel(dest: second, tone: AppColors.ai),
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 560) {
+              return Column(
+                children: [
+                  _DestinationPanel(dest: first, tone: AppColors.explore),
+                  const SizedBox(height: 10),
+                  _DestinationPanel(dest: second, tone: AppColors.ai),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(
+                  child: _DestinationPanel(
+                    dest: first,
+                    tone: AppColors.explore,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DestinationPanel(dest: second, tone: AppColors.ai),
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 20),
         const Text('Faktor utama', style: AppTextStyles.sectionTitle),
@@ -426,7 +442,7 @@ class _DestinationPanel extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -540,7 +556,7 @@ class _FactorRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -548,7 +564,8 @@ class _FactorRow extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
           const SizedBox(height: 10),
-          _FactorBar(name: firstName, value: firstValue, color: AppColors.explore),
+          _FactorBar(
+              name: firstName, value: firstValue, color: AppColors.explore),
           const SizedBox(height: 8),
           _FactorBar(name: secondName, value: secondValue, color: AppColors.ai),
         ],
@@ -570,7 +587,7 @@ class _FactorBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = (value.clamp(4, 100) as num).toDouble();
+    final width = value.clamp(4, 100).toDouble();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -647,7 +664,7 @@ class _SignalCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: risk ? AppColors.surfaceDanger : AppColors.surfaceSuccess,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: risk
               ? AppColors.negative.withValues(alpha: .2)
@@ -672,7 +689,9 @@ class _SignalCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      risk ? LucideIcons.triangleAlert : LucideIcons.circleCheck,
+                      risk
+                          ? LucideIcons.triangleAlert
+                          : LucideIcons.circleCheck,
                       size: 16,
                       color: risk ? AppColors.negative : AppColors.positive,
                     ),
@@ -754,7 +773,7 @@ class _TopicList extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(

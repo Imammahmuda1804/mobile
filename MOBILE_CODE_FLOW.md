@@ -58,18 +58,17 @@ Alur:
 Posisi pada flow: navigasi utama aplikasi.
 
 Kegunaan:
-- mendefinisikan route `home`, `search/destinations`, `routes`, `routes/saved`, `compare`, `profile`, `destination/:slug`, `login`, dan `register`;
+- mendefinisikan route `home`, katalog `destinations`, `search`, `routes`, `routes/saved`, `compare`, `profile`, `destination/:slug`, `login`, dan `register`;
 - membuat shell tab utama;
-- menjaga bottom navigation dan brand bar mobile.
+- menjaga bottom navigation mobile.
 
 Komentar penting:
 - `appRouterProvider`: router utama untuk tab shell, detail, auth, dan deep link query.
-- `MainShell`: shell utama yang menampilkan brand bar dan bottom navigation.
-- `_MobileBrandBar`: brand bar untuk identitas RANAHINSIGHT.
+- `MainShell`: shell utama yang menampilkan bottom navigation.
 
 Alur:
 1. GoRouter membaca lokasi saat ini.
-2. Route tab dibungkus oleh `MainShell`.
+2. Route tab dibungkus oleh `MainShell` tanpa brand bar permanen.
 3. Detail destinasi dan auth berada di luar shell tab.
 4. Query param seperti `q`, `d1`, dan `d2` dipakai untuk search/compare.
 
@@ -225,11 +224,11 @@ File penting:
 Komentar penting:
 - `HomeRepository`: repository API untuk rekomendasi dan trending di home.
 - `homeTrendingProvider`: memuat destinasi rekomendasi untuk home.
-- `HomePage`: halaman home mobile dengan hero, prompt, insight, dan rekomendasi timecard.
+- `HomePage`: halaman home mobile dengan hero pencarian fotografis, dua prompt, insight, dan rekomendasi.
 
 Alur:
 1. `homeTrendingProvider` memanggil `HomeRepository.fetchTrending`.
-2. Home menampilkan hero, prompt search, insight, dan rekomendasi.
+2. Home menampilkan hero pencarian, dua quick prompt, insight, dan rekomendasi.
 3. `_RecommendationSection` menampilkan rekomendasi sebagai `PageView` timecard dengan gambar aktif, deskripsi, indicator, tombol navigasi, dan CTA detail.
 3. Klik CTA search mengarah ke `/search?q=...`.
 4. Klik destinasi mengarah ke `/destination/:slug`.
@@ -261,6 +260,12 @@ Alur keyword search:
 4. Response diubah menjadi `DestinationSummary`.
 5. UI menampilkan kartu destinasi.
 
+Alur katalog:
+1. User membuka tab `/destinations`.
+2. `SearchPage` dimuat tanpa keyword dan menampilkan daftar destinasi awal.
+3. Filter kota/kategori tetap tersedia untuk browsing ringan.
+4. `/search?q=...` tetap dipakai ketika user memulai pencarian dari home.
+
 Alur semantic search:
 1. User mengaktifkan mode semantic.
 2. `_search` memanggil `SearchRepository.searchSemantic`.
@@ -284,7 +289,7 @@ Komentar penting:
 - `TopicGroupInsight`: model topic group luas untuk peta topik.
 - `ScrapedTopicReview`: model review scraping saat membuka topik.
 - `destinationDetailProvider`: memuat detail destinasi berdasarkan slug.
-- `DestinationDetailPage`: halaman detail destinasi dengan hero, metrik, topik, galeri, favorite, dan review.
+- `DestinationDetailPage`: halaman detail destinasi dengan hero, tiga metrik utama, data rating lanjutan yang dapat dibuka, topik, galeri, favorite, dan review.
 - `_checkFavorite`: mengecek status favorit user untuk destinasi aktif.
 - `_toggleFavorite`: menambah atau menghapus favorit dengan rollback saat gagal.
 - `_showTopicReviews`: membuka bottom sheet review berdasarkan topik atau topic group.
@@ -292,7 +297,7 @@ Komentar penting:
 Alur:
 1. Router membuka `/destination/:slug`.
 2. `destinationDetailProvider` memanggil `DestinationRepository.fetchBySlug`.
-3. Data detail ditampilkan pada hero, metric grid, decision cards, topic insight, gallery, review, dan form.
+3. Data detail ditampilkan pada hero, tiga metric utama, keputusan cepat, deskripsi, expandable metrics, topic insight, gallery, review, dan form.
 4. Jika user login, app mengecek favorite.
 5. Klik topic membuka bottom sheet review yang terkait.
 6. Submit review mengirim rating dan teks ke backend.
@@ -331,7 +336,7 @@ Alur route tersimpan:
 3. Tiap card tracker memanggil `savedRouteProgressProvider(route.id)`.
 4. Tombol `Dikunjungi` memanggil `PUT /api/routes/saved/:routeId/progress/:routeStopId`.
 5. Tombol `Batal` memanggil `DELETE /api/routes/saved/:routeId/progress/:routeStopId`.
-6. Progress bar dan next stop diperbarui setelah provider di-invalidate.
+6. Action `Tujuan berikutnya`, progress bar, dan timeline diperbarui setelah provider di-invalidate.
 
 Alur detail route:
 1. Router membuka `/route/:shareSlug`.
@@ -455,7 +460,7 @@ Bagian ini memetakan file Flutter yang memengaruhi startup, routing, network, st
 | --- | --- | --- | --- |
 | `Mobile/lib/main.dart` | Entrypoint Flutter | Memuat env, inisialisasi Flutter binding, provider scope, dan menjalankan app. | `main` `main.dart:7` |
 | `Mobile/lib/app/app.dart` | Root app | Menjalankan bootstrap awal, startup splash, theme, dan router. | `appBootstrapProvider` `app.dart:10`, `RanahInsightApp` `app.dart:18` |
-| `Mobile/lib/app/router.dart` | Navigasi | Mendefinisikan route, shell bottom navigation, brand bar, dan tab utama. | `appRouterProvider` `router.dart:17`, `MainShell` `router.dart:74` |
+| `Mobile/lib/app/router.dart` | Navigasi | Mendefinisikan route katalog/search, shell bottom navigation, dan tab utama tanpa brand bar permanen. | `appRouterProvider`, `MainShell` |
 | `Mobile/lib/app/config/env.dart` | Config env | Membaca API base URL dari `.env` untuk koneksi backend. | `Env` `env.dart:3` |
 | `Mobile/lib/app/config/api_endpoints.dart` | Endpoint map | Menyimpan path endpoint backend agar repository tidak hard-code string berulang. | `ApiEndpoints` `api_endpoints.dart:1` |
 | `Mobile/lib/app/theme/app_colors.dart` | Token warna | Menyamakan warna brand, AI, sentiment, surface, dan status di semua screen. | `AppColors` `app_colors.dart:3` |
@@ -502,7 +507,7 @@ Bagian ini memetakan file Flutter yang memengaruhi startup, routing, network, st
 | Path | Posisi pada flow | Kegunaan | Referensi baris utama |
 | --- | --- | --- | --- |
 | `Mobile/lib/features/home/data/home_repository.dart` | Repository home | Mengambil trending/rekomendasi destinasi dari backend. | `homeRepositoryProvider` `home_repository.dart:6`, `HomeRepository` `home_repository.dart:11` |
-| `Mobile/lib/features/home/presentation/home_page.dart` | Tampilan home | Hero, search CTA, signal cards, insight panel, action bento, dan rekomendasi timecard. | `homeTrendingProvider` `home_page.dart:18`, `HomePage` `home_page.dart:44`, `_HeroLanding` `home_page.dart:121`, `_RecommendationSection` `home_page.dart:693` |
+| `Mobile/lib/features/home/presentation/home_page.dart` | Tampilan home | Hero pencarian fotografis, dua quick prompt, signal cards, insight panel, action bento, dan rekomendasi `PageView`. | `homeTrendingProvider`, `HomePage`, `_HeroLanding`, `_RecommendationSection` |
 | `Mobile/lib/features/search/data/search_models.dart` | Model search | Parser destination summary dan topic filter dari response search. | `DestinationTopic` `search_models.dart:3`, `DestinationSummary` `search_models.dart:20`, `TopicFilter` `search_models.dart:85` |
 | `Mobile/lib/features/search/data/search_repository.dart` | Repository search | Memanggil keyword/semantic search, daftar kota, dan history search. | `searchRepositoryProvider` `search_repository.dart:9`, `SearchRepository` `search_repository.dart:14` |
 | `Mobile/lib/features/search/presentation/search_page.dart` | Tampilan search | Mengatur query, mode search, filter kota/kategori, history, loading, error, dan result card. | `citiesProvider` `search_page.dart:20`, `SearchPage` `search_page.dart:32`, `_SearchCommandSurface` `search_page.dart:249`, `_FilterButton` `search_page.dart:451` |
@@ -551,3 +556,10 @@ Bagian ini memetakan file Flutter yang memengaruhi startup, routing, network, st
 6. **Routes**: `routes_page.dart` menampilkan route publik, route user, route tersimpan, dan progress stop melalui `routes_repository.dart`.
 7. **Compare**: `compare_page.dart:26` memilih destinasi, `compare_repository.dart:19` meminta hasil compare, lalu `compare_models.dart:83` memetakan hasil.
 8. **Profile/favorite**: `profile_page.dart:32` mengatur UI profile/favorite, `profile_repository.dart:16` menjadi jalur data, dan `profile_models.dart:4` memetakan favorite card.
+# Pembaruan Home dan Motion (Juni 2026)
+
+- Home memprioritaskan tiga workflow: pencarian, rekomendasi destinasi, dan melanjutkan rute tersimpan.
+- Penjelasan sentiment/topic dipindahkan ke `ExpansionTile` agar tersedia tanpa memenuhi initial viewport.
+- Carousel rekomendasi memakai transisi sekitar 200-220 ms dan skala nonaktif `0.98`.
+- Tombol route tracker membuka `/routes/saved`, tempat pengguna menandai stop yang sudah dikunjungi.
+- Radius, typography, button, input, dan navigation theme dikendalikan dari `lib/app/theme` serta shared widget di `lib/core/widgets`.

@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../core/widgets/app_logo.dart';
-import 'theme/app_colors.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/auth/presentation/register_page.dart';
 import '../features/compare/presentation/compare_page.dart';
@@ -37,7 +35,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/destinations',
-            redirect: (_, __) => '/search',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SearchPage()),
           ),
           GoRoute(
             path: '/compare',
@@ -111,7 +110,7 @@ class MainShell extends StatelessWidget {
 
   static const _tabs = [
     _ShellTab('/', 'Beranda', LucideIcons.house),
-    _ShellTab('/search', 'Destinasi', LucideIcons.mapPinned),
+    _ShellTab('/destinations', 'Destinasi', LucideIcons.mapPinned),
     _ShellTab('/routes', 'Rute', LucideIcons.route),
     _ShellTab('/compare', 'Bandingkan', LucideIcons.gitCompareArrows),
     _ShellTab('/profile', 'Profil', LucideIcons.userRound),
@@ -126,12 +125,7 @@ class MainShell extends StatelessWidget {
     );
 
     return Scaffold(
-      body: Column(
-        children: [
-          const _MobileBrandBar(),
-          Expanded(child: child),
-        ],
-      ),
+      body: child,
       bottomNavigationBar: NavigationBar(
         height: 72,
         selectedIndex: currentIndex < 0 ? 0 : currentIndex,
@@ -144,65 +138,6 @@ class MainShell extends StatelessWidget {
               label: tab.label,
             ),
         ],
-      ),
-    );
-  }
-}
-
-// Brand bar mobile yang menjaga identitas RANAHINSIGHT di setiap tab.
-class _MobileBrandBar extends StatelessWidget {
-  const _MobileBrandBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Container(
-        height: 64,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(bottom: BorderSide(color: AppColors.border)),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x0F0F172A),
-              blurRadius: 12,
-              offset: Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const AppLogo(size: 34),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3EC),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color(0xFFFFD0BA)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(
-                    LucideIcons.sparkles,
-                    size: 14,
-                    color: AppColors.primary,
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    'AI Travel',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -22,7 +22,7 @@ class InfoPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: background ?? color.withValues(alpha: .1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: .18)),
       ),
       child: Row(

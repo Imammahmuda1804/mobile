@@ -152,7 +152,7 @@ class _StopTile extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -169,7 +169,7 @@ class _StopTile extends StatelessWidget {
               children: [
                 Text(
                   destination?.name ?? 'Destinasi',
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -203,7 +203,7 @@ class _LinkOnlyInfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceCool,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFBAE6FD)),
       ),
       child: Row(
@@ -217,7 +217,7 @@ class _LinkOnlyInfoCard extends StatelessWidget {
               children: [
                 const Text(
                   'Rute link only',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(

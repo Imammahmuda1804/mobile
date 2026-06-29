@@ -100,15 +100,19 @@ Mobile memakai endpoint backend `/api/routes/*` untuk route wisata:
 - `/route/:shareSlug` membuka detail route shareable;
 - `/routes/saved` menampilkan route yang disimpan user;
 - user bisa menyimpan atau menghapus simpanan route publik;
-- route tersimpan memiliki tracker kunjungan: stop bisa ditandai `dikunjungi`, dibatalkan, dan dibuka ke Google Maps;
+- route tersimpan memiliki tracker kunjungan: tujuan berikutnya tampil sebagai action utama, stop bisa ditandai `dikunjungi`, dibatalkan, dan dibuka ke Google Maps;
 - visibilitas `link_only` tidak menampilkan route di katalog publik, tetapi detail route menyediakan tombol `Salin link rute` yang menyalin `${WEB_BASE_URL}/routes/:shareSlug`;
 - detail destinasi memiliki CTA "Tambahkan ke rute" dan tombol Google Maps.
 
 ## Home dan Rekomendasi
 
-Home mobile memakai `homeTrendingProvider` untuk mengambil data dari `/api/destinations/recommendations`. Section rekomendasi ditampilkan sebagai carousel `PageView` bergaya timecard: satu destinasi aktif tampil besar dengan gambar, kota, deskripsi, rating, skor, sentimen positif, dan CTA ke detail, lalu user bisa swipe atau memakai tombol navigasi.
+Home mobile memakai foto wisata lokal teroptimasi untuk hero pencarian, dua quick prompt, dan section rekomendasi dari `homeTrendingProvider`. First viewport tidak lagi memakai brand bar permanen atau kumpulan signal pill, sehingga pencarian menjadi tugas utama.
 
 Tampilan ini memakai warna brand yang sama dengan web: orange untuk eksplorasi, blue untuk AI/score, emerald untuk sentimen positif, dan overlay gelap agar teks tetap kontras di atas gambar.
+
+Tab `Destinasi` membuka `/destinations` sebagai katalog eksplorasi tanpa keyword. Route `/search` tetap tersedia untuk pencarian keyword/semantic dan deep link query.
+
+Detail destinasi menampilkan tiga metrik utama sebelum deskripsi. Rating tambahan ditempatkan dalam panel ekspansi, sedangkan topik, galeri, dan review tetap berada pada bagian lanjutan.
 
 ## Menjalankan Aplikasi
 
@@ -347,3 +351,6 @@ Periksa:
 - backend menyajikan `/uploads`;
 - `resolveImageUrl` menerima base URL yang benar;
 - permission internet Android tersedia di `AndroidManifest.xml`.
+# Catatan Tampilan
+
+Home mobile disusun untuk pencarian, rekomendasi, dan perjalanan aktif. Detail cara kerja rekomendasi tersedia melalui progressive disclosure. Motion rutin dipersingkat, radius komponen dikurangi, dan route tracker menjadi action utama untuk melanjutkan perjalanan.

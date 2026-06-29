@@ -228,7 +228,7 @@ class _RoutesHero extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceWarm,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFFFD3C1)),
       ),
       child: const Column(
@@ -259,7 +259,7 @@ class _SavedRoutesHero extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceCool,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFBAE6FD)),
       ),
       child: Row(
@@ -305,12 +305,12 @@ class _RouteCatalogCard extends StatelessWidget {
         ? route.stops.first.destination?.imageUrl ?? ''
         : '';
     return InkWell(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(16),
       onTap: () => context.push('/route/${route.shareSlug}'),
       child: Ink(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
         child: Column(
@@ -323,7 +323,7 @@ class _RouteCatalogCard extends StatelessWidget {
                   child: AppCachedImage(
                     imageUrl: firstImage,
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(22),
+                      top: Radius.circular(16),
                     ),
                   ),
                 ),
@@ -419,7 +419,7 @@ class _SavedRouteTrackerCard extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
@@ -439,7 +439,7 @@ class _SavedRouteTrackerCard extends ConsumerWidget {
                 child: AppCachedImage(
                   imageUrl: firstImage,
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
+                    top: Radius.circular(16),
                   ),
                 ),
               ),
@@ -581,6 +581,10 @@ class _SavedRouteTrackerContent extends ConsumerWidget {
             fontWeight: FontWeight.w900,
           ),
         ),
+        if (nextStop != null) ...[
+          const SizedBox(height: 14),
+          _NextStopAction(routeId: route.id, stop: nextStop),
+        ],
         const SizedBox(height: 16),
         for (final stop in route.stops) ...[
           _ProgressStopTile(
@@ -598,6 +602,91 @@ class _SavedRouteTrackerContent extends ConsumerWidget {
           onPressed: () => context.push('/route/${route.shareSlug}'),
         ),
       ],
+    );
+  }
+}
+
+class _NextStopAction extends ConsumerWidget {
+  const _NextStopAction({
+    required this.routeId,
+    required this.stop,
+  });
+
+  final int routeId;
+  final RouteStop stop;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final destination = stop.destination;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.text,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Tujuan berikutnya',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            destination?.name ?? 'Destinasi',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          if (destination?.city.isNotEmpty == true) ...[
+            const SizedBox(height: 4),
+            Text(
+              destination!.city,
+              style: const TextStyle(
+                color: Color(0xFFCBD5E1),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: stop.id == 0
+                      ? null
+                      : () async {
+                          await ref
+                              .read(routesRepositoryProvider)
+                              .markStopVisited(
+                                routeId: routeId,
+                                routeStopId: stop.id,
+                              );
+                          ref.invalidate(savedRouteProgressProvider(routeId));
+                        },
+                  icon: const Icon(LucideIcons.check, size: 18),
+                  label: const Text('Tandai dikunjungi'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                tooltip: 'Buka Maps',
+                onPressed: () => _openStopMaps(stop),
+                icon: const Icon(LucideIcons.navigation),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -620,7 +709,7 @@ class _ProgressStopTile extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isVisited ? AppColors.surfaceSuccess : AppColors.surfaceWarm,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isVisited ? const Color(0xFFBBF7D0) : const Color(0xFFFFD3C1),
         ),
@@ -721,12 +810,12 @@ class _RouteCard extends StatelessWidget {
         ? route.stops.first.destination?.imageUrl ?? ''
         : '';
     return InkWell(
-      borderRadius: BorderRadius.circular(26),
+      borderRadius: BorderRadius.circular(16),
       onTap: () => context.push('/route/${route.shareSlug}'),
       child: Ink(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
         child: Column(
@@ -737,7 +826,7 @@ class _RouteCard extends StatelessWidget {
               child: AppCachedImage(
                 imageUrl: firstImage,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(26),
+                  top: Radius.circular(16),
                 ),
               ),
             ),

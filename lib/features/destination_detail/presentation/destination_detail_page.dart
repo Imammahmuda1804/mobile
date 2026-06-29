@@ -295,6 +295,8 @@ class _DetailContent extends StatelessWidget {
                     ? 'Deskripsi destinasi belum tersedia.'
                     : destination.description,
               ),
+              const SizedBox(height: 10),
+              _AdditionalMetrics(destination: destination),
               const SizedBox(height: 26),
               const AppSectionHeader(
                 icon: LucideIcons.sparkles,
@@ -363,15 +365,14 @@ class _MetricGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 390;
         return GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: compact ? 2 : 4,
+            crossAxisCount: 3,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: compact ? 1.2 : .9,
+            childAspectRatio: .72,
           ),
           children: [
             IconMetricCard(
@@ -394,30 +395,6 @@ class _MetricGrid extends StatelessWidget {
                   : '${destination.googleReviewCount!.round()} review',
               icon: LucideIcons.star,
               color: AppColors.neutral,
-            ),
-            IconMetricCard(
-              label: 'Rating ulasan terolah',
-              value: ratingLabel(destination.scrapedAverageRating),
-              helper: destination.scrapedReviewCount == null
-                  ? null
-                  : '${destination.scrapedReviewCount} ulasan',
-              icon: LucideIcons.chartNoAxesColumn,
-              color: AppColors.ai,
-            ),
-            IconMetricCard(
-              label: 'Rating RanahInsight',
-              value: ratingLabel(destination.averageUserRating),
-              helper: '${destination.totalUserReviews} ulasan user',
-              icon: LucideIcons.usersRound,
-              color: AppColors.explore,
-            ),
-            IconMetricCard(
-              label: 'Review user',
-              value: destination.totalUserReviews > 0
-                  ? destination.totalUserReviews.toString()
-                  : destination.userReviews.length.toString(),
-              icon: LucideIcons.messageSquareText,
-              color: AppColors.ai,
             ),
           ],
         );
@@ -443,11 +420,6 @@ class _DecisionCards extends StatelessWidget {
     final items = [
       (LucideIcons.star, 'Rating trust', ratingLabel(destination.googleRating)),
       (LucideIcons.sparkles, 'Vibe dominan', topTopic),
-      (
-        LucideIcons.messageSquareText,
-        'Social proof',
-        '${destination.userReviews.length} cerita'
-      ),
       (LucideIcons.navigation, 'Akses', access),
     ];
 
@@ -458,7 +430,7 @@ class _DecisionCards extends StatelessWidget {
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
@@ -487,6 +459,77 @@ class _DecisionCards extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
+      ],
+    );
+  }
+}
+
+class _AdditionalMetrics extends StatelessWidget {
+  const _AdditionalMetrics({required this.destination});
+
+  final DestinationDetail destination;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      (
+        'Rating ulasan terolah',
+        ratingLabel(destination.scrapedAverageRating),
+        destination.scrapedReviewCount == null
+            ? 'Belum ada jumlah ulasan'
+            : '${destination.scrapedReviewCount} ulasan'
+      ),
+      (
+        'Rating RanahInsight',
+        ratingLabel(destination.averageUserRating),
+        '${destination.totalUserReviews} ulasan pengguna'
+      ),
+      (
+        'Cerita pengguna',
+        (destination.totalUserReviews > 0
+                ? destination.totalUserReviews
+                : destination.userReviews.length)
+            .toString(),
+        'Ulasan yang dikirim melalui aplikasi'
+      ),
+    ];
+
+    return ExpansionTile(
+      tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+      childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      collapsedShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      backgroundColor: Colors.white,
+      collapsedBackgroundColor: Colors.white,
+      leading: const Icon(LucideIcons.chartNoAxesColumn, color: AppColors.ai),
+      title: const Text(
+        'Data rating lainnya',
+        style: TextStyle(fontWeight: FontWeight.w900),
+      ),
+      children: [
+        for (final item in items)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Text(
+              item.$1,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            subtitle: Text(item.$3),
+            trailing: Text(
+              item.$2,
+              style: const TextStyle(
+                color: AppColors.ai,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -564,7 +607,8 @@ class _TopicInsightSectionState extends State<_TopicInsightSection> {
         _showAllTopics ? topics : topics.take(4).toList(growable: false);
     final visibleGroups =
         _showAllTopics ? groups : groups.take(4).toList(growable: false);
-    final hiddenCount = itemCount - (hasGroups ? visibleGroups.length : visibleTopics.length);
+    final hiddenCount =
+        itemCount - (hasGroups ? visibleGroups.length : visibleTopics.length);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1314,11 +1358,11 @@ class _TopicReviewsSheetState extends ConsumerState<_TopicReviewsSheet> {
             children: [
               AppSectionHeader(
                 icon: LucideIcons.messagesSquare,
-                title: 'Ulasan topik ${widget.group?.name ?? widget.topic?.name ?? ''}',
-                subtitle:
-                    widget.group == null
-                        ? 'Cuplikan ulasan wisatawan yang berkaitan dengan topik ini.'
-                        : 'Cuplikan ulasan dari semua topik sempit di dalam grup ini.',
+                title:
+                    'Ulasan topik ${widget.group?.name ?? widget.topic?.name ?? ''}',
+                subtitle: widget.group == null
+                    ? 'Cuplikan ulasan wisatawan yang berkaitan dengan topik ini.'
+                    : 'Cuplikan ulasan dari semua topik sempit di dalam grup ini.',
               ),
               const SizedBox(height: 12),
               Expanded(

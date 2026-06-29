@@ -6,7 +6,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/app_section_header.dart';
 import '../../../core/widgets/info_pill.dart';
 import '../../../core/widgets/loading_skeleton.dart';
@@ -80,19 +79,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           sliver: SliverList.list(
             children: [
               const AppSectionHeader(
-                icon: LucideIcons.radar,
-                title: 'Trip signal',
-                subtitle:
-                    'Tiga sinyal utama untuk membaca destinasi tanpa membuka banyak ulasan.',
-              ),
-              const SizedBox(height: 14),
-              const _SignalCards(),
-              const SizedBox(height: 24),
-              const _InsightPanel(),
-              const SizedBox(height: 24),
-              const _BentoActionGrid(),
-              const SizedBox(height: 28),
-              const AppSectionHeader(
                 icon: LucideIcons.flame,
                 title: 'Rekomendasi pilihan',
                 subtitle:
@@ -107,6 +93,35 @@ class _HomePageState extends ConsumerState<HomePage> {
                     LoadingSkeleton(height: 260),
                     SizedBox(height: 16),
                     LoadingSkeleton(height: 260),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              const _BentoActionGrid(),
+              const SizedBox(height: 20),
+              Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(top: 12),
+                  leading: const Icon(
+                    LucideIcons.brainCircuit,
+                    color: AppColors.ai,
+                  ),
+                  title: const Text(
+                    'Bagaimana rekomendasi bekerja',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: const Text(
+                    'Lihat sinyal sentimen dan topik yang digunakan.',
+                    style: AppTextStyles.body,
+                  ),
+                  children: const [
+                    _SignalCards(),
+                    SizedBox(height: 14),
+                    _InsightPanel(),
                   ],
                 ),
               ),
@@ -131,15 +146,13 @@ class _HeroLanding extends StatelessWidget {
   Widget build(BuildContext context) {
     final prompts = [
       (LucideIcons.waves, 'Pantai tenang'),
-      (LucideIcons.utensils, 'Kuliner lokal'),
-      (LucideIcons.landmark, 'Wisata budaya'),
       (LucideIcons.usersRound, 'Tempat keluarga'),
     ];
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(34),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
             color: Color(0x260F172A),
@@ -149,12 +162,12 @@ class _HeroLanding extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(34),
+        borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
             Positioned.fill(
               child: Image.asset(
-                'assets/images/auth-bg.jpg',
+                'assets/images/sumbar-tourism-bg.jpg',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const _HeroImageFallback(),
               ),
@@ -175,35 +188,26 @@ class _HeroLanding extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 28, 20, 22),
+              padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const AppLogo(size: 34, textColor: Colors.white),
-                  const SizedBox(height: 26),
-                  const InfoPill(
-                    label: 'AI Tourism Intelligence',
-                    icon: LucideIcons.sparkles,
-                    color: AppColors.ai,
-                    background: Colors.white,
-                  ),
-                  const SizedBox(height: 14),
                   const Text(
-                    'Pilih destinasi dari rasa perjalanan yang Anda cari',
+                    'Temukan perjalanan yang terasa tepat',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 39,
-                      height: .98,
+                      fontSize: 34,
+                      height: 1.03,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'RANAHINSIGHT membaca pola ulasan, memetakan vibe, dan mengarahkan Anda ke destinasi Sumatera Barat yang paling cocok.',
+                    'Cari destinasi Sumatera Barat melalui sentimen dan topik ulasan.',
                     style: TextStyle(
                       color: Color(0xFFE2E8F0),
-                      height: 1.55,
-                      fontWeight: FontWeight.w700,
+                      height: 1.45,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -223,30 +227,6 @@ class _HeroLanding extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppButton(
-                          label: 'Mulai eksplorasi',
-                          icon: LucideIcons.search,
-                          onPressed: onSearch,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 58,
-                        height: 54,
-                        child: IconButton.filledTonal(
-                          tooltip: 'Bandingkan destinasi',
-                          onPressed: () => context.go('/compare'),
-                          icon: const Icon(LucideIcons.gitCompareArrows),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const _HeroSignalLine(),
                 ],
               ),
             ),
@@ -272,7 +252,7 @@ class _HeroSearchBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0x33FFFFFF), width: 2),
       ),
       child: Row(
@@ -296,66 +276,6 @@ class _HeroSearchBar extends StatelessWidget {
           IconButton.filled(
             onPressed: onSearch,
             icon: const Icon(LucideIcons.arrowRight),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroSignalLine extends StatelessWidget {
-  const _HeroSignalLine();
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        _HeroSignalPill(
-          icon: LucideIcons.sparkles,
-          label: 'AI membaca ulasan',
-        ),
-        _HeroSignalPill(
-          icon: LucideIcons.mapPinned,
-          label: 'Fokus Sumatera Barat',
-        ),
-        _HeroSignalPill(
-          icon: LucideIcons.gitCompareArrows,
-          label: 'Bisa dibandingkan',
-        ),
-      ],
-    );
-  }
-}
-
-class _HeroSignalPill extends StatelessWidget {
-  const _HeroSignalPill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: .18)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 15),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-            ),
           ),
         ],
       ),
@@ -396,7 +316,7 @@ class _SignalCards extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
@@ -406,7 +326,7 @@ class _SignalCards extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     color: item.$4.withValues(alpha: .1),
-                    borderRadius: BorderRadius.circular(17),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(item.$1, color: item.$4),
                 ),
@@ -417,7 +337,7 @@ class _SignalCards extends StatelessWidget {
                     children: [
                       Text(
                         item.$2,
-                        style: const TextStyle(fontWeight: FontWeight.w900),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 3),
                       Text(item.$3, style: AppTextStyles.body),
@@ -443,7 +363,7 @@ class _InsightPanel extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surfaceCool,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.ai.withValues(alpha: .18)),
       ),
       child: Column(
@@ -511,14 +431,14 @@ class _SentimentMeter extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
             const Spacer(),
             Text(
               value,
               style: const TextStyle(
                 color: AppColors.muted,
                 fontSize: 12,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -543,148 +463,76 @@ class _BentoActionGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _BentoCard(
-          icon: LucideIcons.compass,
-          title: 'Temukan destinasi yang cocok',
-          body:
-              'Mulai dari mood perjalanan, lalu biarkan sistem membaca destinasi yang paling relevan.',
-          color: const Color(0xFF111927),
-          foreground: Colors.white,
-          action: AppButton(
-            label: 'Cari sekarang',
-            icon: LucideIcons.search,
-            onPressed: () => context.go('/search'),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _MiniBentoCard(
-                icon: LucideIcons.gitCompareArrows,
-                title: 'Bandingkan vibe',
-                color: AppColors.explore,
-                onTap: () => context.go('/compare'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _MiniBentoCard(
-                icon: LucideIcons.heart,
-                title: 'Simpan pilihan',
-                color: AppColors.ai,
-                onTap: () => context.go('/profile'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _BentoCard extends StatelessWidget {
-  const _BentoCard({
-    required this.icon,
-    required this.title,
-    required this.body,
-    required this.color,
-    required this.foreground,
-    required this.action,
-  });
-
-  final IconData icon;
-  final String title;
-  final String body;
-  final Color color;
-  final Color foreground;
-  final Widget action;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(30),
+        color: const Color(0xFF111927),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.explore, size: 32),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: TextStyle(
-              color: foreground,
-              fontSize: 25,
-              height: 1,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            body,
-            style: TextStyle(
-              color: foreground.withValues(alpha: .72),
-              height: 1.55,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 18),
-          action,
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniBentoCard extends StatelessWidget {
-  const _MiniBentoCard({
-    required this.icon,
-    required this.title,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(26),
-      onTap: onTap,
-      child: Ink(
-        height: 154,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(26),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: Colors.white, size: 28),
-            const Spacer(),
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 19,
-                height: 1,
-                fontWeight: FontWeight.w900,
+          const Row(
+            children: [
+              Icon(
+                LucideIcons.mapPinned,
+                color: AppColors.explore,
+                size: 22,
               ),
+              SizedBox(width: 10),
+              Text(
+                'Lanjutkan perjalanan',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Buka rute tersimpan, tandai lokasi yang sudah dikunjungi, lalu lanjut ke tujuan berikutnya.',
+            style: TextStyle(
+              color: Color(0xFFCBD5E1),
+              height: 1.5,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => context.go('/routes/saved'),
+                  icon: const Icon(LucideIcons.mapPinned, size: 18),
+                  label: const Text('Rute tersimpan'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                tooltip: 'Bandingkan destinasi',
+                style: IconButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Color(0x55FFFFFF)),
+                ),
+                onPressed: () => context.go('/compare'),
+                icon: const Icon(LucideIcons.gitCompareArrows),
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                tooltip: 'Cari destinasi',
+                style: IconButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Color(0x55FFFFFF)),
+                ),
+                onPressed: () => context.go('/search'),
+                icon: const Icon(LucideIcons.search),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -720,7 +568,7 @@ class _RecommendationSectionState extends State<_RecommendationSection> {
     final targetIndex = index.clamp(0, widget.items.length - 1).toInt();
     _controller.animateToPage(
       targetIndex,
-      duration: const Duration(milliseconds: 420),
+              duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
     );
   }
@@ -744,9 +592,9 @@ class _RecommendationSectionState extends State<_RecommendationSection> {
               final item = widget.items[index];
               final isActive = index == _activeIndex;
               return AnimatedScale(
-                duration: const Duration(milliseconds: 320),
+                duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutCubic,
-                scale: isActive ? 1 : .94,
+                scale: isActive ? 1 : .98,
                 child: Padding(
                   padding: EdgeInsets.only(
                     right: index == widget.items.length - 1 ? 0 : 12,
@@ -788,7 +636,8 @@ class _RecommendationSectionState extends State<_RecommendationSection> {
             const SizedBox(width: 12),
             IconButton.filledTonal(
               tooltip: 'Destinasi sebelumnya',
-              onPressed: _activeIndex == 0 ? null : () => _goTo(_activeIndex - 1),
+              onPressed:
+                  _activeIndex == 0 ? null : () => _goTo(_activeIndex - 1),
               icon: const Icon(LucideIcons.chevronLeft),
             ),
             const SizedBox(width: 8),
@@ -831,7 +680,7 @@ class _TimecardDestination extends StatelessWidget {
         duration: const Duration(milliseconds: 320),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
               color: Color(active ? 0x33111927 : 0x1A111927),
@@ -841,7 +690,7 @@ class _TimecardDestination extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(18),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -876,7 +725,8 @@ class _TimecardDestination extends StatelessWidget {
                 child: Row(
                   children: [
                     InfoPill(
-                      label: '${(index + 1).toString().padLeft(2, '0')}/${total.toString().padLeft(2, '0')}',
+                      label:
+                          '${(index + 1).toString().padLeft(2, '0')}/${total.toString().padLeft(2, '0')}',
                       icon: LucideIcons.flame,
                       background: Colors.white,
                       color: AppColors.explore,
@@ -945,7 +795,7 @@ class _TimecardDestination extends StatelessWidget {
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
@@ -990,7 +840,7 @@ class _RecommendationError extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
       child: const Row(

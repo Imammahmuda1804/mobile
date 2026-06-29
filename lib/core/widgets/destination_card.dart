@@ -39,12 +39,12 @@ class DestinationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: BorderRadius.circular(16),
       onTap: () => context.push('/destination/${destination.slug}'),
       child: Ink(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
         child: Column(
@@ -58,7 +58,7 @@ class DestinationCard extends StatelessWidget {
                     child: AppCachedImage(
                       imageUrl: destination.imageUrl,
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(28),
+                        top: Radius.circular(16),
                       ),
                     ),
                   ),
@@ -78,7 +78,7 @@ class DestinationCard extends StatelessWidget {
                         _ImageBadge(
                           icon: LucideIcons.star,
                           label: ratingLabel(destination.googleRating),
-                        color: AppColors.neutral,
+                          color: AppColors.neutral,
                         ),
                       ],
                     ),
@@ -123,25 +123,25 @@ class DestinationCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
+                  Row(
                     children: [
-                      Chip(
-                        label: Text(destinationCategoryLabel(destination.category)),
-                        visualDensity: VisualDensity.compact,
-                        side: BorderSide.none,
-                        backgroundColor: AppColors.surfaceWarm,
-                      ),
-                      for (final entry in destination.topics.take(3).indexed)
-                        Chip(
-                          label: Text(
-                            entry.$1 == 0 ? 'Top topik: ${entry.$2}' : entry.$2,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide.none,
-                          backgroundColor: AppColors.surfaceCool,
+                      Flexible(
+                        child: _MetadataTag(
+                          label: destinationCategoryLabel(destination.category),
+                          color: AppColors.explore,
+                          background: AppColors.surfaceWarm,
                         ),
+                      ),
+                      if (destination.topics.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: _MetadataTag(
+                            label: destination.topics.first,
+                            color: AppColors.ai,
+                            background: AppColors.surfaceCool,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -195,7 +195,7 @@ class _ImageBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -207,6 +207,39 @@ class _ImageBadge extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w900, color: color),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MetadataTag extends StatelessWidget {
+  const _MetadataTag({
+    required this.label,
+    required this.color,
+    required this.background,
+  });
+
+  final String label;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
