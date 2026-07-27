@@ -192,6 +192,31 @@ class TopicSentimentBreakdown {
   int get total => positive + negative + neutral;
 }
 
+class TopicReviewAssignment {
+  const TopicReviewAssignment({
+    required this.topicId,
+    required this.score,
+    required this.isPrimary,
+    required this.assignmentMethod,
+  });
+
+  factory TopicReviewAssignment.fromJson(Map<String, dynamic> json) {
+    return TopicReviewAssignment(
+      topicId: int.tryParse(json['topicId']?.toString() ?? '0') ?? 0,
+      score: double.tryParse(json['score']?.toString() ?? '0') ?? 0.0,
+      isPrimary: json['isPrimary'] == true || json['is_primary'] == true,
+      assignmentMethod: json['assignmentMethod']?.toString() ??
+          json['assignment_method']?.toString() ??
+          '',
+    );
+  }
+
+  final int topicId;
+  final double score;
+  final bool isPrimary;
+  final String assignmentMethod;
+}
+
 // Model review scraping yang ditampilkan saat membuka topik.
 class ScrapedTopicReview {
   const ScrapedTopicReview({
@@ -202,17 +227,31 @@ class ScrapedTopicReview {
     required this.reviewDate,
     this.sentiment,
     this.likesCount = 0,
+    this.topicAssignments = const [],
   });
 
   factory ScrapedTopicReview.fromJson(Map<String, dynamic> json) {
+    final rawAssignments = json['topicAssignments'] ?? json['topic_assignments'];
     return ScrapedTopicReview(
       id: _int(json['id']) ?? 0,
-      reviewerName: json['reviewerName']?.toString() ?? 'Wisatawan',
-      reviewText: json['reviewText']?.toString() ?? '',
+      reviewerName: json['reviewerName']?.toString() ??
+          json['reviewer_name']?.toString() ??
+          'Wisatawan',
+      reviewText: json['reviewText']?.toString() ??
+          json['review_text']?.toString() ??
+          '',
       rating: _num(json['rating']),
-      reviewDate: json['reviewDate']?.toString() ?? '',
+      reviewDate: json['reviewDate']?.toString() ??
+          json['review_date']?.toString() ??
+          '',
       sentiment: json['sentiment']?.toString(),
       likesCount: _int(json['likesCount']) ?? 0,
+      topicAssignments: rawAssignments is List
+          ? rawAssignments
+              .whereType<Map<String, dynamic>>()
+              .map(TopicReviewAssignment.fromJson)
+              .toList()
+          : const [],
     );
   }
 
@@ -223,6 +262,7 @@ class ScrapedTopicReview {
   final String reviewDate;
   final String? sentiment;
   final int likesCount;
+  final List<TopicReviewAssignment> topicAssignments;
 }
 
 class UserReview {

@@ -5,7 +5,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_section_header.dart';
 import '../../../core/widgets/info_pill.dart';
 import '../../../core/widgets/loading_skeleton.dart';

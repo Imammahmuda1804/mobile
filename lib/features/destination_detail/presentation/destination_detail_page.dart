@@ -1298,7 +1298,7 @@ void _showTopicReviews(
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _TopicReviewsSheet(
-      destinationId: destination.id,
+      destination: destination,
       topic: topic,
       group: group,
     ),
@@ -1307,12 +1307,12 @@ void _showTopicReviews(
 
 class _TopicReviewsSheet extends ConsumerStatefulWidget {
   const _TopicReviewsSheet({
-    required this.destinationId,
+    required this.destination,
     this.topic,
     this.group,
   });
 
-  final int destinationId;
+  final DestinationDetail destination;
   final DestinationTopic? topic;
   final TopicGroupInsight? group;
 
@@ -1322,6 +1322,7 @@ class _TopicReviewsSheet extends ConsumerStatefulWidget {
 
 class _TopicReviewsSheetState extends ConsumerState<_TopicReviewsSheet> {
   late final Future<List<ScrapedTopicReview>> _future;
+  late final Map<int, String> _topicNameMap;
 
   @override
   void initState() {
@@ -1330,17 +1331,31 @@ class _TopicReviewsSheetState extends ConsumerState<_TopicReviewsSheet> {
     final topic = widget.topic;
     _future = group != null
         ? ref.read(destinationRepositoryProvider).fetchReviewsByTopicGroup(
-              destinationId: widget.destinationId,
+              destinationId: widget.destination.id,
               groupId: group.id,
             )
         : ref.read(destinationRepositoryProvider).fetchReviewsByTopic(
-              destinationId: widget.destinationId,
+              destinationId: widget.destination.id,
               topicId: topic?.id ?? 0,
             );
+
+    // Build map topic ID -> name
+    _topicNameMap = <int, String>{};
+    for (final item in widget.destination.topics) {
+      _topicNameMap[item.id] = item.name;
+    }
+    for (final g in widget.destination.topicGroups) {
+      _topicNameMap[g.id] = g.name;
+      for (final t in g.topics) {
+        _topicNameMap[t.id] = t.name;
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final activeTopicId = widget.group?.id ?? widget.topic?.id ?? 0;
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -1391,8 +1406,11 @@ class _TopicReviewsSheetState extends ConsumerState<_TopicReviewsSheet> {
                     return ListView.separated(
                       itemCount: reviews.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) =>
-                          _TopicReviewTile(review: reviews[index]),
+                      itemBuilder: (context, index) => _TopicReviewTile(
+                        review: reviews[index],
+                        topicNameMap: _topicNameMap,
+                        activeTopicId: activeTopicId,
+                      ),
                     );
                   },
                 ),
@@ -1406,9 +1424,15 @@ class _TopicReviewsSheetState extends ConsumerState<_TopicReviewsSheet> {
 }
 
 class _TopicReviewTile extends StatelessWidget {
-  const _TopicReviewTile({required this.review});
+  const _TopicReviewTile({
+    required this.review,
+    required this.topicNameMap,
+    required this.activeTopicId,
+  });
 
   final ScrapedTopicReview review;
+  final Map<int, String> topicNameMap;
+  final int activeTopicId;
 
   @override
   Widget build(BuildContext context) {
@@ -1434,11 +1458,11 @@ class _TopicReviewTile extends StatelessWidget {
               const Icon(LucideIcons.userRound, size: 18),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  review.reviewerName,
+                child: const Text(
+                  'Pengguna Anonim',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                  style: TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
               if (sentiment.isNotEmpty)
@@ -1476,6 +1500,235 @@ class _TopicReviewTile extends StatelessWidget {
                 ? 'Ulasan ini tidak memiliki teks.'
                 : review.reviewText,
             style: AppTextStyles.body,
+          ),
+          _ReviewTopicInsight(
+            review: review,
+            topicNameMap: topicNameMap,
+            activeTopicId: activeTopicId,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewTopicInsight extends StatelessWidget {
+  const _ReviewTopicInsight({
+    required this.review,
+    required this.topicNameMap,
+    required this.activeTopicId,
+  });
+
+  final ScrapedTopicReview review;
+  final Map<int, String> topicNameMap;
+  final int activeTopicId;
+
+  String _sentimentPhrase(String? sentiment) {
+    final s = (sentiment ?? '').toLowerCase();
+    if (s == 'positive' || s == 'positif') return 'bernada positif';
+    if (s == 'negative' || s == 'negatif') return 'bernada negatif';
+    if (s == 'neutral' || s == 'netral') return 'bernada netral';
+    return 'belum punya arah sentimen yang kuat';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final assignments = review.topicAssignments;
+    if (assignments.isEmpty) return const SizedBox.shrink();
+
+    TopicReviewAssignment? primary;
+    for (final a in assignments) {
+      if (a.isPrimary) {
+        primary = a;
+        break;
+      }
+    }
+    if (primary == null && assignments.isNotEmpty) {
+      primary = assignments.first;
+      for (final a in assignments) {
+        if (a.score > primary!.score) {
+          primary = a;
+        }
+      }
+    }
+
+    if (primary == null) return const SizedBox.shrink();
+
+    final primaryName = topicNameMap[primary.topicId] ?? 'Topik #${primary.topicId}';
+    final primaryScore = (primary.score * 100).round().clamp(0, 100);
+
+    final supporting = assignments
+        .where((a) => a.topicId != primary!.topicId)
+        .take(3)
+        .toList();
+
+    final activeAssignment = assignments.firstWhere(
+      (a) => a.topicId == activeTopicId,
+      orElse: () => const TopicReviewAssignment(
+        topicId: -1,
+        score: 0.0,
+        isPrimary: false,
+        assignmentMethod: '',
+      ),
+    );
+
+    final activeName = activeAssignment.topicId != -1
+        ? topicNameMap[activeAssignment.topicId]
+        : null;
+
+    final sentiment = _sentimentPhrase(review.sentiment);
+
+    String meaning = 'Ulasan ini $sentiment, paling kuat membahas $primaryName';
+    if (supporting.isNotEmpty) {
+      final supportingNames = supporting
+          .map((a) => topicNameMap[a.topicId] ?? 'Topik #${a.topicId}')
+          .toList();
+      if (supportingNames.length == 1) {
+        meaning += ', dan juga menyinggung ${supportingNames[0]}';
+      } else if (supportingNames.length == 2) {
+        meaning += ', dan juga menyinggung ${supportingNames[0]} dan ${supportingNames[1]}';
+      } else {
+        meaning += ', dan juga menyinggung ${supportingNames[0]}, ${supportingNames[1]}, dan ${supportingNames[2]}';
+      }
+    }
+    meaning += '.';
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const InfoPill(
+                label: 'Hal paling terasa',
+                icon: LucideIcons.target,
+                color: AppColors.primary,
+                background: AppColors.surfaceWarm,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceCool,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFBAE6FD)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      primaryName,
+                      style: const TextStyle(
+                        color: AppColors.ai,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$primaryScore%',
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (activeName != null && activeAssignment.topicId != primary.topicId)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceWarm,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFFD3C1)),
+                  ),
+                  child: Text(
+                    'Aktif: $activeName',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (supporting.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Text(
+                    'Pewakilan lain: ',
+                    style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      for (final a in supporting)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(
+                            '${topicNameMap[a.topicId] ?? 'Topik #${a.topicId}'} ${(a.score * 100).round()}%',
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              meaning,
+              style: const TextStyle(
+                color: AppColors.text,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                height: 1.4,
+              ),
+            ),
           ),
         ],
       ),
