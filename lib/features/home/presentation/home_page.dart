@@ -502,13 +502,13 @@ class _BentoActionGrid extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
+              /* Expanded(
                 child: FilledButton.icon(
                   onPressed: () => context.go('/routes/saved'),
                   icon: const Icon(LucideIcons.mapPinned, size: 18),
                   label: const Text('Rute tersimpan'),
                 ),
-              ),
+              ), */
               const SizedBox(width: 8),
               IconButton.outlined(
                 tooltip: 'Bandingkan destinasi',
@@ -567,7 +567,7 @@ class _RecommendationSectionState extends State<_RecommendationSection> {
     final targetIndex = index.clamp(0, widget.items.length - 1).toInt();
     _controller.animateToPage(
       targetIndex,
-              duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
     );
   }

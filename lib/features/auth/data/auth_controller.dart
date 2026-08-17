@@ -57,6 +57,13 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final user = await _ref.read(authRepositoryProvider).fetchMe();
+      if (user.role.toUpperCase() == 'ADMIN') {
+        await storage.clearTokens();
+        state = const AuthState(
+          errorMessage: 'Akun Admin hanya dapat diakses melalui Dashboard Web.',
+        );
+        return;
+      }
       state = AuthState(user: user, isAuthenticated: true);
     } catch (_) {
       await storage.clearTokens();
@@ -70,6 +77,13 @@ class AuthController extends StateNotifier<AuthState> {
       final session = await _ref
           .read(authRepositoryProvider)
           .login(email: email, password: password);
+      if (session.user.role.toUpperCase() == 'ADMIN') {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: 'Akun Admin hanya dapat diakses melalui Dashboard Web.',
+        );
+        return false;
+      }
       await _ref.read(secureStorageProvider).saveTokens(
             accessToken: session.accessToken,
             refreshToken: session.refreshToken,
@@ -90,6 +104,13 @@ class AuthController extends StateNotifier<AuthState> {
       final session = await _ref
           .read(authRepositoryProvider)
           .loginWithGoogle(idToken: idToken);
+      if (session.user.role.toUpperCase() == 'ADMIN') {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: 'Akun Admin hanya dapat diakses melalui Dashboard Web.',
+        );
+        return false;
+      }
       await _ref.read(secureStorageProvider).saveTokens(
             accessToken: session.accessToken,
             refreshToken: session.refreshToken,

@@ -111,7 +111,7 @@ class MainShell extends StatelessWidget {
   static const _tabs = [
     _ShellTab('/', 'Beranda', LucideIcons.house),
     _ShellTab('/destinations', 'Destinasi', LucideIcons.mapPinned),
-    _ShellTab('/routes', 'Rute', LucideIcons.route),
+    /*  _ShellTab('/routes', 'Rute', LucideIcons.route), */
     _ShellTab('/compare', 'Bandingkan', LucideIcons.gitCompareArrows),
     _ShellTab('/profile', 'Profil', LucideIcons.userRound),
   ];

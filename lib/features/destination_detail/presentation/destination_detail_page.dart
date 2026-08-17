@@ -273,14 +273,14 @@ class _DetailContent extends StatelessWidget {
                   onPressed: onTrailer,
                 ),
               ],
-              const SizedBox(height: 10),
+              /*  const SizedBox(height: 10),
               AppButton(
                 label: 'Tambahkan ke rute',
                 icon: LucideIcons.route,
                 isSecondary: true,
                 onPressed: () =>
                     context.push('/routes/new?destinationId=${destination.id}'),
-              ),
+              ), */
               const SizedBox(height: 26),
               const AppSectionHeader(
                 icon: LucideIcons.badgeCheck,
@@ -1554,7 +1554,8 @@ class _ReviewTopicInsight extends StatelessWidget {
 
     if (primary == null) return const SizedBox.shrink();
 
-    final primaryName = topicNameMap[primary.topicId] ?? 'Topik #${primary.topicId}';
+    final primaryName =
+        topicNameMap[primary.topicId] ?? 'Topik #${primary.topicId}';
     final primaryScore = (primary.score * 100).round().clamp(0, 100);
 
     final supporting = assignments
@@ -1586,9 +1587,11 @@ class _ReviewTopicInsight extends StatelessWidget {
       if (supportingNames.length == 1) {
         meaning += ', dan juga menyinggung ${supportingNames[0]}';
       } else if (supportingNames.length == 2) {
-        meaning += ', dan juga menyinggung ${supportingNames[0]} dan ${supportingNames[1]}';
+        meaning +=
+            ', dan juga menyinggung ${supportingNames[0]} dan ${supportingNames[1]}';
       } else {
-        meaning += ', dan juga menyinggung ${supportingNames[0]}, ${supportingNames[1]}, dan ${supportingNames[2]}';
+        meaning +=
+            ', dan juga menyinggung ${supportingNames[0]}, ${supportingNames[1]}, dan ${supportingNames[2]}';
       }
     }
     meaning += '.';
@@ -1645,9 +1648,11 @@ class _ReviewTopicInsight extends StatelessWidget {
                   ],
                 ),
               ),
-              if (activeName != null && activeAssignment.topicId != primary.topicId)
+              if (activeName != null &&
+                  activeAssignment.topicId != primary.topicId)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceWarm,
                     borderRadius: BorderRadius.circular(8),
