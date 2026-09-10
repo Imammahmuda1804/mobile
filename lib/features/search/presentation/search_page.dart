@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/destination_categories.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/app_button.dart';
@@ -47,6 +46,7 @@ class SearchPage extends ConsumerStatefulWidget {
 class _SearchPageState extends ConsumerState<SearchPage> {
   final _queryController = TextEditingController();
   var _semanticMode = false;
+  var _semanticSort = 'hybrid';
   var _loading = false;
   var _hasSearched = false;
   var _selectedCity = '';
@@ -82,6 +82,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       final results = _semanticMode && query.isNotEmpty
           ? await repository.searchSemantic(
               query: query,
+              sort: _semanticSort,
               city: _selectedCity,
               category: _selectedCategory,
             )
@@ -106,6 +107,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       _queryController.clear();
       _selectedCity = '';
       _selectedCategory = '';
+      _semanticSort = 'hybrid';
       _results = [];
       _hasSearched = false;
       _error = null;
@@ -133,31 +135,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   Future<void> _clearHistory() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Bersihkan riwayat?'),
-        content: const Text('Semua riwayat pencarian akan dihapus.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Bersihkan'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
     try {
       await ref.read(searchRepositoryProvider).clearHistory();
       ref.invalidate(searchHistoryProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Riwayat pencarian dibersihkan.')),
+        const SnackBar(content: Text('Semua riwayat pencarian dibersihkan.')),
       );
     } catch (_) {
       if (!mounted) return;
@@ -177,45 +160,152 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _SearchCommandSurface(
+          // 1. Search TextField (gaya flat & bersih seperti halaman profil)
+          TextField(
             controller: _queryController,
-            semanticMode: _semanticMode,
-            selectedCategory: _selectedCategory,
-            selectedCity: _selectedCity,
-            cities: cities,
-            categories: categories,
-            onSearch: _search,
-            onModeChanged: (value) {
-              setState(() => _semanticMode = value);
+            onSubmitted: (_) => _search(),
+            decoration: InputDecoration(
+              hintText: _semanticMode
+                  ? 'Cari makna (misal: pantai tenang)...'
+                  : 'Cari destinasi, wisata, budaya...',
+              prefixIcon: Icon(
+                _semanticMode ? LucideIcons.sparkles : LucideIcons.search,
+              ),
+              suffixIcon: _queryController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(LucideIcons.x, size: 16),
+                      onPressed: () {
+                        _queryController.clear();
+                        setState(() {});
+                      },
+                    )
+                  : null,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+
+          // 2. Filter Action Row: Kategori & Kota (gaya _FilterAction seperti halaman profil)
+          Row(
+            children: [
+              Expanded(
+                child: categories.when(
+                  data: (items) => _FilterAction(
+                    icon: LucideIcons.layers,
+                    label: _selectedCategory.isEmpty
+                        ? 'Semua kategori'
+                        : items
+                            .firstWhere(
+                              (c) => c.value == _selectedCategory,
+                              orElse: () => DestinationCategoryOption(
+                                value: _selectedCategory,
+                                label: _selectedCategory,
+                              ),
+                            )
+                            .label,
+                    onTap: () async {
+                      final value = await showAppSelectSheet<String>(
+                        context: context,
+                        title: 'Pilih kategori',
+                        selectedValue: _selectedCategory,
+                        options: [
+                          const SelectOption(
+                            value: '',
+                            label: 'Semua kategori',
+                            icon: LucideIcons.layers,
+                          ),
+                          for (final category in items)
+                            SelectOption(
+                              value: category.value,
+                              label: category.label,
+                              icon: LucideIcons.tag,
+                            ),
+                        ],
+                      );
+                      if (value != null) {
+                        setState(() => _selectedCategory = value);
+                        _search();
+                      }
+                    },
+                  ),
+                  loading: () => const LoadingSkeleton(height: 48),
+                  error: (_, __) => _FilterAction(
+                    icon: LucideIcons.layers,
+                    label: _selectedCategory.isEmpty
+                        ? 'Semua kategori'
+                        : destinationCategoryLabel(_selectedCategory),
+                    onTap: () {},
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: cities.when(
+                  data: (items) => _FilterAction(
+                    icon: LucideIcons.mapPin,
+                    label: _selectedCity.isEmpty ? 'Semua kota' : _selectedCity,
+                    onTap: () async {
+                      final value = await showAppSelectSheet<String>(
+                        context: context,
+                        title: 'Pilih kota',
+                        selectedValue: _selectedCity,
+                        searchable: true,
+                        searchHint: 'Cari kota destinasi',
+                        options: [
+                          const SelectOption(
+                            value: '',
+                            label: 'Semua kota',
+                            icon: LucideIcons.map,
+                          ),
+                          for (final city in items)
+                            SelectOption(
+                              value: city,
+                              label: city,
+                              icon: LucideIcons.mapPin,
+                            ),
+                        ],
+                      );
+                      if (value != null) {
+                        setState(() => _selectedCity = value);
+                        _search();
+                      }
+                    },
+                  ),
+                  loading: () => const LoadingSkeleton(height: 48),
+                  error: (_, __) => _FilterAction(
+                    icon: LucideIcons.mapPin,
+                    label: _selectedCity.isEmpty ? 'Semua kota' : _selectedCity,
+                    onTap: () {},
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 3. SegmentedButton Mode (Keyword vs Semantic)
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: false,
+                icon: Icon(LucideIcons.type),
+                label: Text('Keyword'),
+              ),
+              ButtonSegment(
+                value: true,
+                icon: Icon(LucideIcons.brain),
+                label: Text('Semantic'),
+              ),
+            ],
+            selected: {_semanticMode},
+            onSelectionChanged: (value) {
+              setState(() => _semanticMode = value.first);
               if (_hasSearched) _search();
             },
-            onCategoryChanged: (value) {
-              setState(() => _selectedCategory = value);
-              _search();
-            },
-            onCityChanged: (value) {
-              setState(() => _selectedCity = value);
-              _search();
-            },
           ),
-          const SizedBox(height: 16),
-          history.when(
-            data: (items) => items.isEmpty
-                ? const SizedBox.shrink()
-                : _SearchHistoryChips(
-                    items: items,
-                    onSelect: (item) {
-                      _queryController.text = item.keyword;
-                      _search();
-                    },
-                    onDelete: _deleteHistoryItem,
-                    onClear: _clearHistory,
-                  ),
-            error: (_, __) => const SizedBox.shrink(),
-            loading: () => const SizedBox.shrink(),
-          ),
-          if (history.valueOrNull?.isNotEmpty == true)
-            const SizedBox(height: 16),
+          const SizedBox(height: 14),
+
+          // 4. Tombol "Cari" & Reset
           Row(
             children: [
               Expanded(
@@ -233,7 +323,53 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+
+          // 5. Toggle Sort jika mode Semantic aktif
+          if (_semanticMode) ...[
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'hybrid',
+                  icon: Icon(LucideIcons.sparkles, size: 16),
+                  label: Text('Rekomendasi'),
+                ),
+                ButtonSegment(
+                  value: 'relevance',
+                  icon: Icon(LucideIcons.target, size: 16),
+                  label: Text('Paling Sesuai'),
+                ),
+              ],
+              selected: {_semanticSort},
+              onSelectionChanged: (value) {
+                setState(() => _semanticSort = value.first);
+                if (_hasSearched) _search();
+              },
+            ),
+          ],
+          const SizedBox(height: 14),
+
+          // 6. Riwayat Pencarian Dropdown
+          history.when(
+            data: (items) => items.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _SearchHistoryChips(
+                      items: items,
+                      onSelect: (item) {
+                        _queryController.text = item.keyword;
+                        _search();
+                      },
+                      onDelete: _deleteHistoryItem,
+                      onClear: _clearHistory,
+                    ),
+                  ),
+            error: (_, __) => const SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+          ),
+
+          // 7. Hasil Pencarian
           if (_loading) ...[
             const LoadingSkeleton(height: 280),
             const SizedBox(height: 16),
@@ -252,7 +388,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           else if (_hasSearched && _results.isEmpty)
             EmptyState(
               title: 'Tidak ada hasil',
-              message: 'Coba ubah kata kunci, kota, atau topik.',
+              message: 'Coba ubah kata kunci, kota, atau kategori.',
               action: AppButton(
                 label: 'Reset filter',
                 icon: LucideIcons.rotateCcw,
@@ -287,7 +423,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   city: item.city,
                   imageUrl: item.imageUrl,
                   positiveRatio: item.positiveRatio,
-                  score: item.recommendationScore ?? item.matchScore,
+                  score: item.recommendationScore,
+                  matchScore: _semanticMode &&
+                          _queryController.text.trim().isNotEmpty
+                      ? item.matchScore
+                      : null,
                   googleRating: item.googleRating,
                   category: item.category,
                   topics: item.topics.map((topic) => topic.name).toList(),
@@ -302,198 +442,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 }
 
-class _SearchCommandSurface extends StatelessWidget {
-  const _SearchCommandSurface({
-    required this.controller,
-    required this.semanticMode,
-    required this.selectedCategory,
-    required this.selectedCity,
-    required this.cities,
-    required this.categories,
-    required this.onSearch,
-    required this.onModeChanged,
-    required this.onCategoryChanged,
-    required this.onCityChanged,
+class _FilterAction extends StatelessWidget {
+  const _FilterAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
   });
 
-  final TextEditingController controller;
-  final bool semanticMode;
-  final String selectedCategory;
-  final String selectedCity;
-  final AsyncValue<List<String>> cities;
-  final AsyncValue<List<DestinationCategoryOption>> categories;
-  final VoidCallback onSearch;
-  final ValueChanged<bool> onModeChanged;
-  final ValueChanged<String> onCategoryChanged;
-  final ValueChanged<String> onCityChanged;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final tone = semanticMode ? AppColors.ai : AppColors.explore;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: semanticMode ? AppColors.surfaceCool : AppColors.surfaceWarm,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: tone.withValues(alpha: .18)),
-        boxShadow: [
-          BoxShadow(
-            color: tone.withValues(alpha: .08),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  semanticMode ? LucideIcons.brain : LucideIcons.searchCheck,
-                  color: tone,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Katalog destinasi',
-                        style: AppTextStyles.sectionTitle),
-                    SizedBox(height: 2),
-                    Text(
-                      'Lihat semua destinasi atau persempit dengan nama, kota, kategori, dan vibe.',
-                      style: AppTextStyles.body,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          TextField(
-            controller: controller,
-            onSubmitted: (_) => onSearch(),
-            decoration: InputDecoration(
-              hintText: semanticMode
-                  ? 'Contoh: pantai tenang untuk keluarga'
-                  : 'Pantai tenang, wisata budaya...',
-              prefixIcon: Icon(
-                semanticMode ? LucideIcons.sparkles : LucideIcons.search,
-              ),
-              suffixIcon: IconButton(
-                onPressed: onSearch,
-                icon: const Icon(LucideIcons.arrowRight),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(
-                value: false,
-                icon: Icon(LucideIcons.type),
-                label: Text('Keyword'),
-              ),
-              ButtonSegment(
-                value: true,
-                icon: Icon(LucideIcons.brain),
-                label: Text('Semantic'),
-              ),
-            ],
-            selected: {semanticMode},
-            onSelectionChanged: (value) => onModeChanged(value.first),
-          ),
-          const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final twoColumns = constraints.maxWidth >= 420;
-              final categoryButton = categories.when(
-                data: (items) => _CategoryFilterButton(
-                  selectedCategory: selectedCategory,
-                  categories: items,
-                  onCategoryChanged: onCategoryChanged,
-                ),
-                loading: () => const _FilterButton(
-                  icon: LucideIcons.layers,
-                  tone: AppColors.explore,
-                  label: 'Memuat kategori',
-                ),
-                error: (_, __) => _CategoryFilterButton(
-                  selectedCategory: selectedCategory,
-                  categories: destinationCategories,
-                  onCategoryChanged: onCategoryChanged,
-                ),
-              );
-              final cityButton = cities.when(
-                data: (items) => _FilterButton(
-                  icon: LucideIcons.mapPin,
-                  tone: AppColors.ai,
-                  label: selectedCity.isEmpty ? 'Semua kota' : selectedCity,
-                  onTap: () async {
-                    final value = await showAppSelectSheet<String>(
-                      context: context,
-                      title: 'Pilih kota',
-                      selectedValue: selectedCity,
-                      searchable: true,
-                      searchHint: 'Cari kota destinasi',
-                      options: [
-                        const SelectOption(
-                          value: '',
-                          label: 'Semua kota',
-                          icon: LucideIcons.map,
-                        ),
-                        for (final city in items)
-                          SelectOption(
-                            value: city,
-                            label: city,
-                            icon: LucideIcons.mapPin,
-                          ),
-                      ],
-                    );
-                    if (value == null) return;
-                    onCityChanged(value);
-                  },
-                ),
-                error: (_, __) => const SizedBox.shrink(),
-                loading: () => const LoadingSkeleton(height: 54),
-              );
-
-              if (!twoColumns) {
-                return Column(
-                  children: [
-                    categoryButton,
-                    const SizedBox(height: 10),
-                    cityButton,
-                  ],
-                );
-              }
-
-              return Row(
-                children: [
-                  Expanded(child: categoryButton),
-                  const SizedBox(width: 10),
-                  Expanded(child: cityButton),
-                ],
-              );
-            },
-          ),
-        ],
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 17),
+      label: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
 }
 
-class _SearchHistoryChips extends StatelessWidget {
+class _SearchHistoryChips extends StatefulWidget {
   const _SearchHistoryChips({
     required this.items,
     required this.onSelect,
@@ -507,9 +481,15 @@ class _SearchHistoryChips extends StatelessWidget {
   final Future<void> Function() onClear;
 
   @override
+  State<_SearchHistoryChips> createState() => _SearchHistoryChipsState();
+}
+
+class _SearchHistoryChipsState extends State<_SearchHistoryChips> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -518,41 +498,66 @@ class _SearchHistoryChips extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(LucideIcons.history, size: 16, color: AppColors.ai),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Riwayat pencarian',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.history, size: 16, color: AppColors.ai),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Riwayat pencarian (${widget.items.length})',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  if (_expanded)
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => widget.onClear(),
+                      child: const Text('Bersihkan', style: TextStyle(fontSize: 12)),
+                    ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                    size: 18,
+                    color: AppColors.muted,
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () {
-                  onClear();
-                },
-                child: const Text('Bersihkan'),
+            ),
+          ),
+          if (_expanded) ...[
+            const Divider(height: 1, color: AppColors.border),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final item in widget.items)
+                    _HistoryChip(
+                      item: item,
+                      onSelect: () => widget.onSelect(item),
+                      onDelete: item.id == null
+                          ? null
+                          : () {
+                              widget.onDelete(item);
+                            },
+                    ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final item in items)
-                _HistoryChip(
-                  item: item,
-                  onSelect: () => onSelect(item),
-                  onDelete: item.id == null
-                      ? null
-                      : () {
-                          onDelete(item);
-                        },
-                ),
-            ],
-          ),
+            ),
+          ],
         ],
       ),
     );
@@ -606,99 +611,6 @@ class _HistoryChip extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryFilterButton extends StatelessWidget {
-  const _CategoryFilterButton({
-    required this.selectedCategory,
-    required this.categories,
-    required this.onCategoryChanged,
-  });
-
-  final String selectedCategory;
-  final List<DestinationCategoryOption> categories;
-  final ValueChanged<String> onCategoryChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return _FilterButton(
-      icon: LucideIcons.layers,
-      tone: AppColors.explore,
-      label: selectedCategory.isEmpty
-          ? 'Semua kategori'
-          : destinationCategoryLabel(selectedCategory),
-      onTap: () async {
-        final value = await showAppSelectSheet<String>(
-          context: context,
-          title: 'Pilih kategori',
-          selectedValue: selectedCategory,
-          searchable: true,
-          searchHint: 'Cari kategori destinasi',
-          options: [
-            const SelectOption(
-              value: '',
-              label: 'Semua kategori',
-              icon: LucideIcons.layers,
-            ),
-            for (final category in categories)
-              SelectOption(
-                value: category.value,
-                label: category.label,
-                icon: LucideIcons.tag,
-              ),
-          ],
-        );
-        if (value == null) return;
-        onCategoryChanged(value);
-      },
-    );
-  }
-}
-
-class _FilterButton extends StatelessWidget {
-  const _FilterButton({
-    required this.label,
-    required this.icon,
-    this.onTap,
-    this.tone = AppColors.explore,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback? onTap;
-  final Color tone;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Ink(
-        height: 54,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: tone.withValues(alpha: .16)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: tone),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ),
-            const Icon(LucideIcons.chevronDown, size: 18),
-          ],
         ),
       ),
     );

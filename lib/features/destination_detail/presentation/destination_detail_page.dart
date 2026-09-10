@@ -345,7 +345,10 @@ class _DetailContent extends StatelessWidget {
                   context: context,
                   isScrollControlled: true,
                   showDragHandle: true,
-                  builder: (_) => _ReviewForm(destinationId: destination.id),
+                  builder: (_) => _ReviewForm(
+                    destinationId: destination.id,
+                    slug: destination.slug,
+                  ),
                 ),
               ),
             ],
@@ -1742,9 +1745,13 @@ class _ReviewTopicInsight extends StatelessWidget {
 }
 
 class _ReviewForm extends ConsumerStatefulWidget {
-  const _ReviewForm({required this.destinationId});
+  const _ReviewForm({
+    required this.destinationId,
+    required this.slug,
+  });
 
   final int destinationId;
+  final String slug;
 
   @override
   ConsumerState<_ReviewForm> createState() => _ReviewFormState();
@@ -1780,7 +1787,13 @@ class _ReviewFormState extends ConsumerState<_ReviewForm> {
             rating: _rating,
             reviewText: _controller.text.trim(),
           );
-      if (mounted) Navigator.of(context).pop();
+      ref.invalidate(destinationDetailProvider(widget.slug));
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ulasan berhasil dikirim!')),
+        );
+      }
     } catch (_) {
       setState(() => _error = 'Ulasan gagal dikirim. Coba lagi.');
     } finally {

@@ -15,6 +15,7 @@ class DestinationCardData {
     required this.imageUrl,
     this.positiveRatio,
     this.score,
+    this.matchScore,
     this.googleRating,
     this.category,
     this.topics = const [],
@@ -26,6 +27,7 @@ class DestinationCardData {
   final String imageUrl;
   final num? positiveRatio;
   final num? score;
+  final num? matchScore;
   final num? googleRating;
   final String? category;
   final List<String> topics;
@@ -70,11 +72,18 @@ class DestinationCard extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _ImageBadge(
-                          icon: LucideIcons.sparkles,
-                          label: 'Skor ${scoreLabel(destination.score)}',
-                          color: AppColors.ai,
-                        ),
+                        if (destination.matchScore != null)
+                          _ImageBadge(
+                            icon: LucideIcons.sparkles,
+                            label: '${(destination.matchScore! * 100).round()}% Sesuai',
+                            color: AppColors.ai,
+                          )
+                        else
+                          _ImageBadge(
+                            icon: LucideIcons.sparkles,
+                            label: 'Skor ${scoreLabel(destination.score)}',
+                            color: AppColors.ai,
+                          ),
                         _ImageBadge(
                           icon: LucideIcons.star,
                           label: ratingLabel(destination.googleRating),
